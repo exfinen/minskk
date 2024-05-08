@@ -1,0 +1,2 @@
+require('minskk').test()
+
