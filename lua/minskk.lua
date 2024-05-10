@@ -100,7 +100,7 @@ function M.input_filter(c)
 
     elseif res["type"] == g_kana_tree.TraverseResult.ToKatakana then
       g_kana_tree.set_katakana()
-      M.alert("かたかな")
+      M.alert("カタカナ")
 
     elseif res["type"] == g_kana_tree.TraverseResult.None then
     end
