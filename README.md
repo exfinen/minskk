@@ -11,10 +11,9 @@ This plugin is written fully from scratch using `Lua` as glue code and `Rust` fo
 ## Currently, you can more or less type in:
 - Hiragana
 - Katakana
-- Half-width (hankaku) Alphabets
+- Half-width (hankaku) Alphanumeric Characters
 
 ## TO BE SUPPORTED
-- Half-width (hankaku) Symbols
 - Full-width (zenkaku) Alphanumeric Characters
 - Kanji
 
