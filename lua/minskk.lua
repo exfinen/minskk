@@ -88,28 +88,57 @@ function M.go_to_kana_mode()
   M.alert("ひらがな")
 end
 
+local function delete_chars_before_cursor(n)
+  local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+  vim.schedule(function()
+    vim.api.nvim_buf_set_text(
+      0,
+      row - 1, col - n,
+      row - 1, col,
+      {}
+    )
+  end)
+end
+
 function M.input_filter(c)
   if g_curr_skk_mode == SkkMode.Kana then
     local res = g_kana_tree.traverse(c)
 
-    if res["type"] == g_kana_tree.TraverseResult.Letter then
+    if res["type"] == g_kana_tree.TraverseResult.GotLetter then
+      local depth = res["depth"]
+      delete_chars_before_cursor(depth - 1)
       return res["value"]
 
     elseif res["type"] == g_kana_tree.TraverseResult.ToLowerCase then
       M.go_to_lowercase_mode()
+      return ""
 
     elseif res["type"] == g_kana_tree.TraverseResult.ToKatakana then
       g_kana_tree.set_katakana()
       M.alert("カタカナ")
+      return ""
 
-    elseif res["type"] == g_kana_tree.TraverseResult.None then
+    elseif res["type"] == g_kana_tree.TraverseResult.MovedNext then
+      -- show intermediate conversion process
+      return c
+
+    elseif res["type"] == g_kana_tree.TraverseResult.Failed then
+      -- delete chars typed so far and start over
+      local depth = res["depth"]
+      delete_chars_before_cursor(depth)
+      g_kana_tree.go_to_root()
+      return M.input_filter(c)
+
+    else
+      error('should not be visited. check code (3)')
     end
 
   elseif g_curr_skk_mode == SkkMode.LowerCase then
+    -- no processing is needed. return what is typed
     return c
+  else
+    error('should not be visited. check code (4)')
   end
-
-  return ""
 end
 
 function M.on_key_press(key)
