@@ -117,14 +117,14 @@ local function go_to_kana_mode()
   alert("ひらがな")
 end
 
-local function delete_chars_before_cursor(n, offset)
+local function delete_n_chars_before_cursor(n, offset, replacement)
   local row, col = unpack(vim.api.nvim_win_get_cursor(0))
   vim.schedule(function()
     vim.api.nvim_buf_set_text(
       0,
       row - 1, col - n - (offset or 0),
       row - 1, col - (offset or 0),
-      {}
+      (replacement or {})
     )
   end)
 end
@@ -135,7 +135,7 @@ local function go_to_select_kanji_mode_and_return_first_kanji()
   if g_accompaying_kana ~= '' then
     reading_len = reading_len + #'*' + #g_accompaying_kana
   end
-  delete_chars_before_cursor(#'▽' + reading_len)
+  delete_n_chars_before_cursor(#'▽' + reading_len)
 
   alert("Select Kanji " .. g_reading .. ' ' .. tostring(#g_reading))
 
@@ -148,7 +148,7 @@ local function go_to_select_kanji_mode_and_return_first_kanji()
 end
 
 local function remove_kanji_selection_marker()
-  delete_chars_before_cursor(#'▼', g_prev_kanji_len)
+  delete_n_chars_before_cursor(#'▼', g_prev_kanji_len)
 end
 
 local function handle_space()
@@ -165,11 +165,12 @@ local function handle_space()
     return go_to_select_kanji_mode_and_return_first_kanji()
 
   elseif g_curr_kana_mode == KanaMode.SelectKanji then
-    -- delete previously displayed kanji
-    delete_chars_before_cursor(g_prev_kanji_len)
+    local kanji = get_next_kanji()
 
-    -- return the next kanji
-    return get_next_kanji()
+    -- replace previously displayed kanji w/ the next one
+    delete_n_chars_before_cursor(g_prev_kanji_len, 0, {kanji})
+
+    return ''
   else
     error('should not be visited. check code (5)')
   end
@@ -273,7 +274,7 @@ local function input_filter(c)
         local depth = res["depth"]
         local letter = res["value"]
 
-        delete_chars_before_cursor(depth - 1)
+        delete_n_chars_before_cursor(depth - 1)
         letter = reading_buf_filter(letter)
 
         return letter
@@ -289,7 +290,7 @@ local function input_filter(c)
           return ''
         else
           -- otherwise, delete the chars typed so far
-          delete_chars_before_cursor(depth)
+          delete_n_chars_before_cursor(depth)
           -- and start traversing again from the root
           g_kana_tree.go_to_root()
           return input_filter(c)
