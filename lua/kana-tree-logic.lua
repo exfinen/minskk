@@ -16,8 +16,6 @@ M.TraverseResult = {
   Failed = 1,
   MovedNext = 2,
   GotLetter = 3,
-  ToKatakana = 4,
-  ToLowerCase = 5,
 }
 
 function M.set_hiragana()
@@ -50,26 +48,6 @@ function M.traverse(c)
       return {
         ["type"] = M.TraverseResult.MovedNext,
       }
-
-    -- if instruction leaf node
-    elseif #g_state.curr_node == 1 then
-      -- get the instruction
-      local inst = g_state.curr_node[1][1]
-
-      -- go back to tree root
-      M.go_to_root()
-
-      if inst == g_kana_tree.Instruction.ToKatakana then
-        return {
-          ["type"] = M.TraverseResult.ToKatakana,
-        }
-      elseif inst == g_kana_tree.Instruction.ToLowerCase then
-        return {
-          ["type"] = M.TraverseResult.ToLowerCase,
-        }
-      else
-        error('should not be visited. check code (1)')
-      end
 
     -- if kana leaf node
     elseif #g_state.curr_node == 2 then

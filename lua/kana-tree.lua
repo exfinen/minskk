@@ -1,10 +1,5 @@
 local M = {}
 
-M.Instruction = {
-  ToLowerCase = 1,
-  ToKatakana = 2,
-}
-
 M.root = {
   ["a"] = {
     { "あ", {} },
@@ -245,9 +240,6 @@ M.root = {
       },
     },
   },
-  ["l"] = {
-    { M.Instruction.ToLowerCase, {} },
-  },
   ["m"] = {
     ["a"] = {
       { "ま", {} },
@@ -385,9 +377,6 @@ M.root = {
         { "ッポ", {} },
       },
     },
-  },
-  ["q"] = {
-    { M.Instruction.ToKatakana, {} },
   },
   ["r"] = {
     ["a"] = {
