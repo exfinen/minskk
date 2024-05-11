@@ -123,12 +123,17 @@ function M.input_filter(c)
       return c
 
     elseif res["type"] == g_kana_tree.TraverseResult.Failed then
-      -- delete chars typed so far and start over
       local depth = res["depth"]
-      delete_chars_before_cursor(depth)
-      g_kana_tree.go_to_root()
-      return M.input_filter(c)
-
+      -- ignore if the char is not the beginning of any valid path
+      if depth == 0 then
+        return ""
+      else
+        -- otherwise, delete the chars typed so far
+        delete_chars_before_cursor(depth)
+        -- and start traversing again from the root
+        g_kana_tree.go_to_root()
+        return M.input_filter(c)
+      end
     else
       error('should not be visited. check code (3)')
     end
