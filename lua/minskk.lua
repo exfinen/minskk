@@ -36,15 +36,15 @@ function M.enable()
     go_to_direct_input_kana_state()
     return
   else
+    -- if enabled outside the insert mode, enter to insert mode
+    vim.cmd('startinsert')
     M.is_enabled = true
-    go_to_direct_input_hfc_state()
   end
 end
 
 local function disable()
   if M.is_enabled then
     M.is_enabled = false
-    g_common.alert("MinSKK disabled")
   end
 end
 
@@ -61,7 +61,7 @@ local function on_key_press(key)
 end
 
 function M.init()
-  vim.api.nvim_set_keymap("n", "<C-j>", "<ESC>:MinSKKEnable<CR>", {})
+  vim.api.nvim_set_keymap("n", "<C-j>", "<ESC>:MinSKKEnable<CR>", { silent = true })
   vim.keymap.set("i", "<C-j>", function() M.curr_state.handle_ctrl_j() end, {})
   vim.keymap.set("i", "<CR>", function() M.curr_state.handle_cr() end, {})
 
@@ -81,6 +81,8 @@ function M.init()
 
   local ns_id = vim.api.nvim_create_namespace("minskk_namespace")
   vim.on_key(on_key_press, ns_id)
+
+  M.curr_state = direct_input_hfc_state
 
   -- initialize dfa
   local dfa = {

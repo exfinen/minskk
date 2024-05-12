@@ -16,12 +16,20 @@ end
 function M.delete_n_chars_before_cursor(n, offset, replacement)
   local row, col = unpack(vim.api.nvim_win_get_cursor(0))
   vim.schedule(function()
+    local repl_table = {}
+    if replacement then
+      repl_table = { replacement }
+    end
     vim.api.nvim_buf_set_text(
       0,
       row - 1, col - n - (offset or 0),
       row - 1, col - (offset or 0),
-      (replacement or {})
+      repl_table
     )
+    if replacement then
+      -- move the cursor to the rightmost position
+      vim.api.nvim_win_set_cursor(0, { row, col + #replacement })
+    end
   end)
 end
 

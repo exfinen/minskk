@@ -91,7 +91,7 @@ function M.handle_input(c)
     return ''
 
   elseif c == 'q' then
-    M.go_to_dfa.direct_input_kana_state()
+    M.dfa.go_to_direct_input_kana_state()
     return ''
 
   elseif c == ';' then
@@ -108,9 +108,8 @@ function M.handle_input(c)
 
       local reading_len = get_reading_len()
 
-      g_common.alert('reading_len=' .. tostring(reading_len) .. ' reading=' .. M.reading)
-      g_common.delete_n_chars_before_cursor(#'▽' + reading_len, 0, {replacement})
-
+      g_common.delete_n_chars_before_cursor(#'▽' + reading_len, 0, replacement)
+      -- need to move cursor to the end of the replacement
       return ''
     end
   else

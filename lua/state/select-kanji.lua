@@ -65,7 +65,7 @@ end
 function M.handle_input(c)
   if c == ' ' then
     local kanji = get_next_kanji()
-    g_common.delete_n_chars_before_cursor(M.prev_kanji_len, 0, {kanji})
+    g_common.delete_n_chars_before_cursor(M.prev_kanji_len, 0, kanji)
     return ''
 
   elseif c == ';' then
@@ -84,7 +84,7 @@ function M.enter(exit_immediately, letter)
   M.prev_kanji_len = 0
   build_kanji_list()
 
-  g_common.alert('Select Kanji')
+  --g_common.alert('Select Kanji')
 
   local kanji = get_next_kanji()
 
