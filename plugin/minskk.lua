@@ -1,2 +1,2 @@
-require('minskk').setup()
+require('minskk').init()
 
