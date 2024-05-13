@@ -28,7 +28,7 @@ function M.delete_n_chars_before_cursor(n, offset, replacement)
     )
     if replacement then
       -- move the cursor to the rightmost position
-      vim.api.nvim_win_set_cursor(0, { row, col + #replacement })
+      vim.api.nvim_win_set_cursor(0, { row, col + #replacement - n })
     end
   end)
 end
