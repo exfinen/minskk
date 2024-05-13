@@ -35,6 +35,10 @@ function M.go_to_root()
   M.curr_depth = 0
 end
 
+function M.at_the_root_node()
+  return M.curr_node == g_kana_tree.root
+end
+
 function M.traverse(c)
   if M.curr_node[c] then
     -- move to the child node

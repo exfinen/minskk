@@ -106,15 +106,20 @@ function M.handle_input(c)
       M.dfa.go_to_direct_input_kana_state()
       return ' '
     else
-      -- delete reading and go to select kanji state
-      local kanji = M.dfa.go_to_select_kanji_state()
-      local replacement = '▼' .. kanji
+      -- ignore if still in the middle of entering kana
+      if not g_kana_tree.at_the_root_node() then
+        return ''
+      else
+        -- delete reading and go to select kanji state
+        local kanji = M.dfa.go_to_select_kanji_state()
+        local replacement = '▼' .. kanji
 
-      local reading_len = get_reading_len()
+        local reading_len = get_reading_len()
 
-      g_common.delete_n_chars_before_cursor(#'▽' + reading_len, 0, replacement)
-      -- need to move cursor to the end of the replacement
-      return ''
+        g_common.delete_n_chars_before_cursor(#'▽' + reading_len, 0, replacement)
+        -- need to move cursor to the end of the replacement
+        return ''
+      end
     end
   else
     local res = g_kana_tree_common.traverse(g_kana_tree, M.handle_input, c)
