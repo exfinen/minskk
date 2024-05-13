@@ -85,6 +85,10 @@ function M.handle_cr()
   M.dfa.go_to_direct_input_kana_state()
 end
 
+function M.handle_bs()
+  g_common.alert("BS in Input Reading")
+end
+
 function M.handle_input(c)
   if c == 'l' then
     M.dfa.direct_input_hfc.enter()

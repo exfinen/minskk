@@ -1,6 +1,6 @@
 local M = {
-  curr_kanji_index = 1,
-  prev_kanji_len = 0,
+  curr_candidate_index = 0,
+  prev_candidate_len = 0,
   kanji_list = {},
 }
 
@@ -41,16 +41,30 @@ local function build_kanji_list()
   }
 end
 
-local function get_next_kanji()
-  local kanji = M.kanji_list[M.curr_kanji_index]
-  M.prev_kanji_len = #kanji
+local function get_next_candidate()
+  M.prev_candidate_len = #M.kanji_list[M.curr_candidate_index + 1]
 
-  M.curr_kanji_index = (M.curr_kanji_index % #M.kanji_list) + 1
+  M.curr_candidate_index = (M.curr_candidate_index + 1) % #M.kanji_list
+  local kanji = M.kanji_list[M.curr_candidate_index + 1]
+
+  return kanji
+end
+
+local function get_prev_candidate()
+  M.prev_candidate_len = #M.kanji_list[M.curr_candidate_index + 1]
+
+  if M.curr_candidate_index == 0 then
+    M.curr_candidate_index = #M.kanji_list - 1
+  else
+    M.curr_candidate_index = M.curr_candidate_index - 1
+  end
+  local kanji = M.kanji_list[M.curr_candidate_index + 1]
+
   return kanji
 end
 
 local function finalize()
-  g_common.remove_inverted_triangle(M.prev_kanji_len)
+  g_common.remove_inverted_triangle(M.prev_candidate_len)
   M.dfa.go_to_direct_input_kana_state()
 end
 
@@ -62,15 +76,23 @@ function M.handle_cr()
   finalize()
 end
 
+function M.handle_bs()
+  -- show the previuos kanji candidate
+  local kanji = get_prev_candidate()
+  g_common.delete_n_chars_before_cursor(M.prev_candidate_len, 0, kanji)
+end
+
+
 function M.handle_input(c)
   if c == ' ' then
-    local kanji = get_next_kanji()
-    g_common.delete_n_chars_before_cursor(M.prev_kanji_len, 0, kanji)
+    -- show the next kanji candidate
+    local kanji = get_next_candidate()
+    g_common.delete_n_chars_before_cursor(M.prev_candidate_len, 0, kanji)
     return ''
 
   elseif c == ';' then
     -- select the current kanji and start entering the next word
-    g_common.remove_inverted_triangle(M.prev_kanji_len)
+    g_common.remove_inverted_triangle(M.prev_candidate_len)
     M.dfa.go_to_input_reading_state()
     return '▽'
 
@@ -80,16 +102,17 @@ function M.handle_input(c)
 end
 
 function M.enter(exit_immediately, letter)
-  M.curr_kanji_index = 1
-  M.prev_kanji_len = 0
+  -- TODO handle empty list case
   build_kanji_list()
+  M.curr_candidate_index = #M.kanji_list - 1 -- point to the last element in the beginning
+  M.prev_candidate_len = 0
 
-  --g_common.alert('Select Kanji')
+  g_common.alert('Select Kanji')
 
-  local kanji = get_next_kanji()
+  local kanji = get_next_candidate()
 
   if exit_immediately then
-    -- TODO type letter after moving to direct input kana state
+    -- TODO type letter after entering to direct input kana state
     M.dfa.go_to_direct_input_kana_state(letter)
   end
   return kanji

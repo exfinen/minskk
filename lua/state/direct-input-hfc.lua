@@ -17,7 +17,11 @@ function M.handle_ctrl_j()
 end
 
 function M.handle_cr()
-  g_common.alert("CR in di hfc")
+  g_common.alert("CR in DI hfc")
+end
+
+function M.handle_bs()
+  g_common.alert("BS in DI hfc")
 end
 
 function M.handle_input(c)

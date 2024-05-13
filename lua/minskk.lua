@@ -57,13 +57,16 @@ local function on_key_press(key)
   if key == vim.api.nvim_replace_termcodes("<Esc>", true, false, true) then
     disable()
     return
+  elseif key == vim.api.nvim_replace_termcodes("<CR>", true, false, true) then
+    M.curr_state.handle_cr()
+    return
   end
 end
 
 function M.init()
   vim.api.nvim_set_keymap("n", "<C-j>", "<ESC>:MinSKKEnable<CR>", { silent = true })
   vim.keymap.set("i", "<C-j>", function() M.curr_state.handle_ctrl_j() end, {})
-  vim.keymap.set("i", "<CR>", function() M.curr_state.handle_cr() end, {})
+  vim.keymap.set("i", "<BS>", function() M.curr_state.handle_bs() end, {})
 
   vim.api.nvim_create_autocmd("InsertEnter", {
     pattern = "*",

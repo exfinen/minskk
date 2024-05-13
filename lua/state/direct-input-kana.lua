@@ -23,7 +23,11 @@ function M.handle_ctrl_j()
 end
 
 function M.handle_cr()
-  g_common.alert("CR in di kana")
+  g_common.alert("CR in DI Kana")
+end
+
+function M.handle_bs()
+  g_common.alert("BS in DI Kana")
 end
 
 function M.handle_input(c)
