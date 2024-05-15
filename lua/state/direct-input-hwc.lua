@@ -10,7 +10,7 @@ function M.init(dfa, util)
 end
 
 function M.enter()
-  g_common.alert('Direct Input (Half-width Chars)')
+  g_common.alert('Direct Input (Half-Width Chars)')
 end
 
 function M.handle_ctrl_j()
@@ -26,12 +26,11 @@ function M.handle_bs()
 end
 
 function M.handle_esc()
-  g_common.alert("ESC in DI hfc")
+  g_common.alert("ESC in DI hwc")
   M.util.disable()
 end
 
 function M.handle_input(c)
-  -- return what is typed w/o any processing
   return c
 end
 

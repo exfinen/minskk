@@ -1,6 +1,6 @@
 local M = {}
 
-M.root = {
+local converter = {
   ["あ"] = "ア",
   ["ば"] = "パ",
   ["び"] = "ビ",
@@ -130,6 +130,15 @@ M.root = {
   ["ぜ"] = "ゼ",
   ["ぞ"] = "ゾ",
 }
+
+function M.map(c)
+  local katakana = converter[c]
+  if katakana then
+    return katakana
+  else
+    return c
+  end
+end
 
 return M
 

@@ -4,12 +4,18 @@ local M = {
 }
 
 local direct_input_kana_state = require 'state/direct-input-kana'
-local direct_input_hfc_state = require 'state/direct-input-hfc'
+local direct_input_hwc_state = require 'state/direct-input-hwc'
+local direct_input_fwc_state = require 'state/direct-input-fwc'
 local input_reading_state = require 'state/input-reading'
 local select_kanji_state = require 'state/select-kanji'
 
-local function go_to_direct_input_hfc_state()
-  M.curr_state = direct_input_hfc_state
+local function go_to_direct_input_hwc_state()
+  M.curr_state = direct_input_hwc_state
+  M.curr_state.enter()
+end
+
+local function go_to_direct_input_fwc_state()
+  M.curr_state = direct_input_fwc_state
   M.curr_state.enter()
 end
 
@@ -32,7 +38,7 @@ function M.enable()
   if not M.is_enabled then
     vim.cmd('startinsert')
     M.is_enabled = true
-    go_to_direct_input_hfc_state()
+    go_to_direct_input_hwc_state()
   end
 end
 
@@ -66,11 +72,12 @@ function M.init()
     end,
   })
 
-  M.curr_state = direct_input_hfc_state
+  M.curr_state = direct_input_hwc_state
 
   -- initialize dfa
   local dfa = {
-    go_to_direct_input_hfc_state = go_to_direct_input_hfc_state,
+    go_to_direct_input_hwc_state = go_to_direct_input_hwc_state,
+    go_to_direct_input_fwc_state = go_to_direct_input_fwc_state,
     go_to_direct_input_kana_state = go_to_direct_input_kana_state,
     go_to_input_reading_state = go_to_input_reading_state,
     go_to_select_kanji_state = go_to_select_kanji_state,
@@ -83,7 +90,8 @@ function M.init()
     cr = cr,
     disable = disable,
   }
-  direct_input_hfc_state.init(dfa, util)
+  direct_input_hwc_state.init(dfa, util)
+  direct_input_fwc_state.init(dfa, util)
   direct_input_kana_state.init(dfa, util)
   input_reading_state.init(dfa, util)
   select_kanji_state.init(dfa, util)

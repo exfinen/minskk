@@ -20,7 +20,6 @@ function M.enter()
 end
 
 function M.handle_ctrl_j()
-  -- do nothing
 end
 
 function M.handle_cr()
@@ -38,7 +37,11 @@ end
 
 function M.handle_input(c)
   if c == 'l' then
-    M.dfa.go_to_direct_input_hfc_state()
+    M.dfa.go_to_direct_input_hwc_state()
+    return ''
+
+  elseif c == 'L' then
+    M.dfa.go_to_direct_input_fwc_state()
     return ''
 
   elseif c == 'q' then

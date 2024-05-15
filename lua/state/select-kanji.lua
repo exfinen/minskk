@@ -35,9 +35,11 @@ local function build_candidates(reading, accompanying_kana)
   ]]
 
   M.candidates = {
-    "漢字A",
-    "漢字B",
-    "漢字C",
+    "候補１" .. accompanying_kana,
+    "候補２" .. accompanying_kana,
+    "候補３" .. accompanying_kana,
+    "候補４" .. accompanying_kana,
+    "候補５" .. accompanying_kana,
   }
 end
 

@@ -6,6 +6,7 @@ local M = {
 
 local g_kana_tree = require 'state/kana-tree/logic'
 local g_kana_tree_common = require 'state/kana-tree/common'
+local g_katakana_conv = require 'state/conv-map/katakana'
 local g_common = require 'common'
 
 local InputMode = {
@@ -95,28 +96,33 @@ function M.handle_esc()
   M.dfa.go_to_direct_input_kana_state()
 end
 
+local function remove_inverted_triangle()
+  local reading_len = get_reading_len()
+  g_common.remove_inverted_triangle(reading_len)
+end
+
 local function handle_input_reading_mode(c)
   if c == 'l' then
-    -- remove ▽
-    local reading_len = get_reading_len()
-    g_common.remove_inverted_triangle(reading_len)
+    remove_inverted_triangle()
+    M.dfa.go_to_direct_input_hwc_state()
+    return ''
 
-    M.dfa.go_to_direct_input_hfc_state()
+  elseif c == 'L' then
+    remove_inverted_triangle()
+    M.dfa.go_to_direct_input_fwc_state()
     return ''
 
   elseif c == 'q' then
     local katakana = ''
     for _, kc in ipairs(M.reading) do
-      katakana = katakana .. g_kana_tree.to_katakana(kc)
+      katakana = katakana .. g_katakana_conv.map(kc)
     end
 
-    -- replace hiragana with katakana
+    -- replace hiragana w/ corresponding katakana
     local reading_len = get_reading_len()
     g_common.delete_n_chars_before_cursor(reading_len, 0, katakana)
 
-    -- remove ▽
-    g_common.remove_inverted_triangle(reading_len)
-
+    remove_inverted_triangle()
     M.dfa.go_to_direct_input_kana_state()
     return ''
 
