@@ -1,7 +1,7 @@
 local M = {
   curr_input_mode = nil,
   reading = {},
-  accompanying_kana = '',
+  ak_del_chars = '',
 }
 
 local g_kana_tree = require 'state/kana-tree/logic'
@@ -20,12 +20,12 @@ function M.init(dfa, util)
 end
 
 function M.enter(inst)
+  inst = inst or {}
   g_kana_tree.go_to_root()
   g_kana_tree.set_hiragana()
 
   M.curr_input_mode = InputMode.Reading
   M.reading = inst.reading or {}
-  M.accompaying_kana = ''
 
   g_common.alert('Input Reading (Reading)')
 end
@@ -38,9 +38,6 @@ local function get_reading_len()
   local reading_len = 0
   for _, c in ipairs(M.reading) do
     reading_len = reading_len + #c
-  end
-  if #M.accompanying_kana ~= 0 then
-    reading_len = reading_len + #'*' + #M.accompanying_kana
   end
   return reading_len
 end
@@ -58,22 +55,10 @@ local function handle_sticky_shift()
       -- and start entering accompanying kana
       M.curr_input_mode = InputMode.AccompanyingKana
       g_common.alert('Input Reading (Accompanying Kana)')
-
-      -- TODO replace ▽ with ▼
+      M.ak_del_chars = ''
 
       return '*'
     end
-
-  elseif M.curr_input_mode == InputMode.AccompanyingKana then
-    -- should allow only 1 kana to enter
-    -- finalize the kanji and start entering the next word
-    local reading_len = get_reading_len()
-    g_common.remove_kanji_selection_marker(reading_len)
-
-    M.curr_input_mode = InputMode.InputReading
-    g_common.alert("Input Reading")
-    return '▽'
-
   else
     error('should not be visited. check code (input-reading.lua 1)')
   end
@@ -106,18 +91,16 @@ function M.handle_esc()
   local x = #'▽' + get_reading_len()
   g_common.delete_n_chars_before_cursor(x, 0)
   M.reading = {}
-  M.accompanying_kana = ''
 
   M.dfa.go_to_direct_input_kana_state()
 end
 
-function M.handle_input(c)
+local function handle_input_reading_mode(c)
   if c == 'l' then
     M.dfa.go_to_direct_input_hfc_state()
     return ''
 
   elseif c == 'q' then
-    -- TODO convert reading to katakana
     local katakana = ''
     for _, kc in ipairs(M.reading) do
       katakana = katakana .. g_kana_tree.to_katakana(kc)
@@ -148,42 +131,65 @@ function M.handle_input(c)
         -- delete reading and go to select kanji state
         local kanji = M.dfa.go_to_select_kanji_state({
           reading = M.reading,
-          accompanying_kana = M.accompanying_kana,
+          accompanying_kana = '',
         })
         local replacement = '▼' .. kanji
+        local target = '▽' .. g_common.join_str_array(M.reading)
 
-        local reading_len = get_reading_len()
-
-        g_common.delete_n_chars_before_cursor(#'▽' + reading_len, 0, replacement)
-        -- need to move cursor to the end of the replacement
+        g_common.delete_n_chars_before_cursor(#target, 0, replacement)
         return ''
       end
     end
+    M.dfa.go_to_select_kanji_state.enter({
+      reading = M.reading,
+      accompanying_kana = '',
+    })
   else
     local res = g_kana_tree_common.traverse(g_kana_tree, M.handle_input, c)
     local value = res["value"]
     local is_letter = res["is_letter"]
 
-    if M.curr_input_mode == InputMode.Reading then
-      if is_letter then
-        table.insert(M.reading, value)
-      end
-      return value
-
-    elseif M.curr_input_mode == InputMode.AccompanyingKana then
-      if not is_letter then
-        return value
-      else
-        if #M.accompanying_kana == 0 then
-          M.accompanying_kana = value
-          return value
-        else
-          return M.dfa.go_to_select_kanji_state.enter(true, value)
-        end
-      end
-    else
-      error('should not be visited. check code (input-reading.lua 2)')
+    if is_letter then
+      table.insert(M.reading, value)
     end
+    return value
+  end
+end
+
+local function handle_input_accompanying_kana(c)
+  local res = g_kana_tree_common.traverse(g_kana_tree, M.handle_input, c, true)
+  local value = res["value"]
+  local is_letter = res["is_letter"]
+
+  if is_letter then
+    local kanji = M.dfa.go_to_select_kanji_state({
+      reading = M.reading,
+      accompanying_kana = value,
+    })
+    local replacement = '▼' .. kanji
+
+    local reading = g_common.join_str_array(M.reading)
+    local ak = '*' .. M.ak_del_chars
+    local all = '▽' .. reading .. ak
+
+    g_common.delete_n_chars_before_cursor(#all, 0, replacement, #ak)
+    return ''
+
+  else
+    M.ak_del_chars = M.ak_del_chars .. value
+    return value
+  end
+end
+
+function M.handle_input(c)
+  if M.curr_input_mode == InputMode.Reading then
+    return handle_input_reading_mode(c)
+
+  elseif M.curr_input_mode == InputMode.AccompanyingKana then
+    return handle_input_accompanying_kana(c)
+
+  else
+    error('should not be visited. check code (input-reading.lua 2)')
   end
 end
 

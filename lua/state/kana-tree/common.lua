@@ -2,14 +2,16 @@ local M = {}
 
 local g_common = require 'common'
 
-function M.traverse(kana_tree, handle_input, c)
+function M.traverse(kana_tree, handle_input, c, no_del_upon_got_letter)
   local res = kana_tree.traverse(c)
 
   if res["type"] == kana_tree.TraverseResult.GotLetter then
     local depth = res["depth"]
     local letter = res["value"]
 
-    g_common.delete_n_chars_before_cursor(depth - 1)
+    if not no_del_upon_got_letter then
+      g_common.delete_n_chars_before_cursor(depth - 1)
+    end
 
     return {
       ["value"] = letter,

@@ -13,7 +13,7 @@ end
 -- offset      number of offset chars before start counting n (optional)
 -- replacement replacement chars for the deleted chars (optional)
 --
-function M.delete_n_chars_before_cursor(n, offset, replacement)
+function M.delete_n_chars_before_cursor(n, offset, replacement, suffix_len)
   local row, col = unpack(vim.api.nvim_win_get_cursor(0))
   vim.schedule(function()
     local repl_table = {}
@@ -28,7 +28,8 @@ function M.delete_n_chars_before_cursor(n, offset, replacement)
     )
     if replacement then
       -- move the cursor to the rightmost position
-      vim.api.nvim_win_set_cursor(0, { row, col + #replacement - n })
+      suffix_len = suffix_len or 0
+      vim.api.nvim_win_set_cursor(0, { row, col + #replacement - n + suffix_len })
     end
   end)
 end
@@ -68,7 +69,7 @@ function M.alert(message)
       if vim.api.nvim_win_is_valid(win) then
         vim.api.nvim_win_close(win, true)
       end
-    end, 1000)
+    end, 2000)
   end)
 end
 
