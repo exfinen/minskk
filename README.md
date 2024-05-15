@@ -12,9 +12,10 @@ This plugin is written fully from scratch using `Lua` and `Rust` and works on an
 - Hiragana
 - Katakana
 - Half-width (hankaku) Alphanumeric Characters
+- Full-width (zenkaku) Alphabets
 
 ## TO BE SUPPORTED
-- Full-width (zenkaku) Alphanumeric Characters
-- Kanji
-- Dictionary realted functionalities
+- Full-width (zenkaku) Symbols
+- Kanji Conversion
+- Local Dictionary
 
