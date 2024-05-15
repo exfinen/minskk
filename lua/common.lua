@@ -60,7 +60,7 @@ function M.alert(message)
       if vim.api.nvim_win_is_valid(win) then
         vim.api.nvim_win_close(win, true)
       end
-    end, 2000)
+    end, 1000)
   end)
 end
 

@@ -12,15 +12,15 @@ g_ffi.cdef[[
   size_t get_kanji(const char* buf, const size_t buf_size);
 ]]
 
-
-function M.init(dfa)
+function M.init(dfa, util)
   M.dfa = dfa
+  M.util = util
 end
 
 local this_file_dir = debug.getinfo(1, 'S').source:match("@?(.*/)")
 local rust_lib = g_ffi.load(this_file_dir .. "../../minskk-core/target/debug/libminskk.dylib")
 
-local function build_kanji_list()
+local function build_candidates(reading, accompanying_kana)
   -- call rust function w/ reading and accompanying kane to get the list
   --[[
     local buf_size = 50
@@ -34,33 +34,37 @@ local function build_kanji_list()
     return g_ffi.string(buf, num_chars)
   ]]
 
-  M.kanji_list = {
+  M.candidates = {
     "漢字A",
     "漢字B",
     "漢字C",
   }
 end
 
+local function get_curr_candidate()
+  return M.candidates[M.curr_candidate_index + 1]
+end
+
 local function get_next_candidate()
-  M.prev_candidate_len = #M.kanji_list[M.curr_candidate_index + 1]
+  M.prev_candidate_len = #get_curr_candidate()
 
-  M.curr_candidate_index = (M.curr_candidate_index + 1) % #M.kanji_list
-  local kanji = M.kanji_list[M.curr_candidate_index + 1]
+  -- update curr_candidate index
+  M.curr_candidate_index = (M.curr_candidate_index + 1) % #M.candidates
 
-  return kanji
+  return get_curr_candidate()
 end
 
 local function get_prev_candidate()
-  M.prev_candidate_len = #M.kanji_list[M.curr_candidate_index + 1]
+  M.prev_candidate_len = #get_curr_candidate()
 
+  -- update curr_candidate index
   if M.curr_candidate_index == 0 then
-    M.curr_candidate_index = #M.kanji_list - 1
+    M.curr_candidate_index = #M.candidates - 1
   else
     M.curr_candidate_index = M.curr_candidate_index - 1
   end
-  local kanji = M.kanji_list[M.curr_candidate_index + 1]
 
-  return kanji
+  return get_curr_candidate()
 end
 
 local function finalize()
@@ -82,6 +86,24 @@ function M.handle_bs()
   g_common.delete_n_chars_before_cursor(M.prev_candidate_len, 0, kanji)
 end
 
+local function get_reading_as_string()
+  local s = ''
+  for _, c in ipairs(M.reading) do
+    s = s .. c
+  end
+  return s
+end
+
+function M.handle_esc()
+  -- go back to the input reading state w/o accompanying_kana 
+  local a = '▼' .. get_curr_candidate()
+  local b = '▽' .. get_reading_as_string()
+  g_common.delete_n_chars_before_cursor(#a, 0, b)
+
+  M.dfa.go_to_input_reading_state({
+    reading = M.reading
+  })
+end
 
 function M.handle_input(c)
   if c == ' ' then
@@ -101,21 +123,19 @@ function M.handle_input(c)
   end
 end
 
-function M.enter(exit_immediately, letter)
+function M.enter(inst)
   -- TODO handle empty list case
-  build_kanji_list()
-  M.curr_candidate_index = #M.kanji_list - 1 -- point to the last element in the beginning
+  build_candidates(inst.reading, inst.accompanying_kana)
+
+  M.curr_candidate_index = #M.candidates - 1 -- point to the last element in the beginning
   M.prev_candidate_len = 0
+
+  M.reading = inst.reading
+  M.accompanying_kana = inst.accompanying_kana
 
   g_common.alert('Select Kanji')
 
-  local kanji = get_next_candidate()
-
-  if exit_immediately then
-    -- TODO type letter after entering to direct input kana state
-    M.dfa.go_to_direct_input_kana_state(letter)
-  end
-  return kanji
+  return get_next_candidate()
 end
 
 return M

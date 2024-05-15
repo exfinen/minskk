@@ -6,9 +6,10 @@ local g_kana_tree = require 'state/kana-tree/logic'
 local g_kana_tree_common = require 'state/kana-tree/common'
 local g_common = require 'common'
 
-function M.init(dfa)
+function M.init(dfa, util)
   g_kana_tree.init()
   M.dfa = dfa
+  M.util = util
 end
 
 function M.enter()
@@ -23,11 +24,16 @@ function M.handle_ctrl_j()
 end
 
 function M.handle_cr()
-  g_common.alert("CR in DI Kana")
+  vim.api.nvim_feedkeys(M.util.cr, "in", true)
 end
 
 function M.handle_bs()
+  vim.api.nvim_feedkeys(M.util.bs, "in", true)
+end
+
+function M.handle_esc()
   g_common.alert("BS in DI Kana")
+  M.util.disable()
 end
 
 function M.handle_input(c)
@@ -41,7 +47,7 @@ function M.handle_input(c)
     return ''
 
   elseif c == ';' then
-    M.dfa.go_to_input_reading_state()
+    M.dfa.go_to_input_reading_state({})
     return '▽'
 
   else

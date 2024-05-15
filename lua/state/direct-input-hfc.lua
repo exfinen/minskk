@@ -4,8 +4,9 @@ local M = {}
 
 local g_common = require 'common'
 
-function M.init(dfa)
+function M.init(dfa, util)
   M.dfa = dfa
+  M.util = util
 end
 
 function M.enter()
@@ -17,11 +18,16 @@ function M.handle_ctrl_j()
 end
 
 function M.handle_cr()
-  g_common.alert("CR in DI hfc")
+  vim.api.nvim_feedkeys(M.util.cr, "in", true)
 end
 
 function M.handle_bs()
-  g_common.alert("BS in DI hfc")
+  vim.api.nvim_feedkeys(M.util.bs, "in", true)
+end
+
+function M.handle_esc()
+  g_common.alert("ESC in DI hfc")
+  M.util.disable()
 end
 
 function M.handle_input(c)

@@ -3,8 +3,6 @@ local M = {
   is_enabled = false,
 }
 
-local g_common = require 'common'
-
 local direct_input_kana_state = require 'state/direct-input-kana'
 local direct_input_hfc_state = require 'state/direct-input-hfc'
 local input_reading_state = require 'state/input-reading'
@@ -20,53 +18,39 @@ local function go_to_direct_input_kana_state()
   M.curr_state.enter()
 end
 
-local function go_to_input_reading_state()
+local function go_to_input_reading_state(inst)
   M.curr_state = input_reading_state
-  M.curr_state.enter()
+  M.curr_state.enter(inst)
 end
 
-local function go_to_select_kanji_state(exit_immediately, letter)
+local function go_to_select_kanji_state(inst)
   M.curr_state = select_kanji_state
-  exit_immediately = (exit_immediately or false)
-  return M.curr_state.enter(exit_immediately, letter)
+  return M.curr_state.enter(inst)
 end
 
 function M.enable()
-  if M.is_enabled then
-    go_to_direct_input_kana_state()
-    return
-  else
-    -- if enabled outside the insert mode, enter to insert mode
+  if not M.is_enabled then
     vim.cmd('startinsert')
     M.is_enabled = true
+    go_to_direct_input_hfc_state()
   end
 end
 
 local function disable()
   if M.is_enabled then
     M.is_enabled = false
-  end
-end
-
-local function on_key_press(key)
-  -- exit if not in insert mode
-  if vim.fn.mode() ~= "i" then
-    return
-  end
-
-  if key == vim.api.nvim_replace_termcodes("<Esc>", true, false, true) then
-    disable()
-    return
-  elseif key == vim.api.nvim_replace_termcodes("<CR>", true, false, true) then
-    M.curr_state.handle_cr()
-    return
+    vim.cmd('stopinsert')
   end
 end
 
 function M.init()
   vim.api.nvim_set_keymap("n", "<C-j>", "<ESC>:MinSKKEnable<CR>", { silent = true })
+
   vim.keymap.set("i", "<C-j>", function() M.curr_state.handle_ctrl_j() end, {})
   vim.keymap.set("i", "<BS>", function() M.curr_state.handle_bs() end, {})
+  vim.keymap.set("i", "<C-h>", function() M.curr_state.handle_bs() end, {})
+  vim.keymap.set("i", "<ESC>", function() M.curr_state.handle_esc() end, {})
+  vim.keymap.set("i", "<CR>", function() M.curr_state.handle_cr() end, {})
 
   vim.api.nvim_create_autocmd("InsertEnter", {
     pattern = "*",
@@ -82,9 +66,6 @@ function M.init()
     end,
   })
 
-  local ns_id = vim.api.nvim_create_namespace("minskk_namespace")
-  vim.on_key(on_key_press, ns_id)
-
   M.curr_state = direct_input_hfc_state
 
   -- initialize dfa
@@ -94,10 +75,18 @@ function M.init()
     go_to_input_reading_state = go_to_input_reading_state,
     go_to_select_kanji_state = go_to_select_kanji_state,
   }
-  direct_input_hfc_state.init(dfa)
-  direct_input_kana_state.init(dfa)
-  input_reading_state.init(dfa)
-  select_kanji_state.init(dfa)
+  local bs = vim.api.nvim_replace_termcodes("<BS>", true, false, true)
+  local cr = vim.api.nvim_replace_termcodes("<CR>", true, false, true)
+
+  local util = {
+    bs = bs,
+    cr = cr,
+    disable = disable,
+  }
+  direct_input_hfc_state.init(dfa, util)
+  direct_input_kana_state.init(dfa, util)
+  input_reading_state.init(dfa, util)
+  select_kanji_state.init(dfa, util)
 end
 
 vim.cmd [[

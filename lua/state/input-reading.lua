@@ -1,6 +1,6 @@
 local M = {
   curr_input_mode = nil,
-  reading = '',
+  reading = {},
   accompanying_kana = '',
 }
 
@@ -13,17 +13,18 @@ local InputMode = {
   AccompanyingKana = 2,
 }
 
-function M.init(dfa)
+function M.init(dfa, util)
   g_kana_tree.init()
   M.dfa = dfa
+  M.util = util
 end
 
-function M.enter()
+function M.enter(inst)
   g_kana_tree.go_to_root()
   g_kana_tree.set_hiragana()
 
   M.curr_input_mode = InputMode.Reading
-  M.reading = ''
+  M.reading = inst.reading or {}
   M.accompaying_kana = ''
 
   g_common.alert('Input Reading (Reading)')
@@ -34,7 +35,10 @@ function M.go_to_accompanying_kana_mode()
 end
 
 local function get_reading_len()
-  local reading_len = #M.reading
+  local reading_len = 0
+  for _, c in ipairs(M.reading) do
+    reading_len = reading_len + #c
+  end
   if #M.accompanying_kana ~= 0 then
     reading_len = reading_len + #'*' + #M.accompanying_kana
   end
@@ -44,7 +48,7 @@ end
 local function handle_sticky_shift()
   if M.curr_input_mode == InputMode.Reading then
     -- if reading is empty, go back to direct input mode and type ';'
-    if M.reading == '' then
+    if #M.reading == 0 then
       g_common.delete_n_chars_before_cursor(#'▽')
       M.dfa.go_to_direct_input_hfc_state()
       return ';'
@@ -86,15 +90,35 @@ function M.handle_cr()
 end
 
 function M.handle_bs()
-  g_common.alert("BS in Input Reading")
+  if #M.reading > 0 then
+    -- delete the last char
+    table.remove(M.reading, 1)
+    vim.api.nvim_feedkeys(M.util.bs, "in", true)
+  else
+    -- go back to direct input kana state if there is no char to delete
+    g_common.remove_inverted_triangle(0)
+    M.dfa.go_to_direct_input_kana_state()
+  end
+end
+
+function M.handle_esc()
+  -- clear the reverse triangle and reading
+  local x = #'▽' + get_reading_len()
+  g_common.delete_n_chars_before_cursor(x, 0)
+  M.reading = {}
+  M.accompanying_kana = ''
+
+  M.dfa.go_to_direct_input_kana_state()
 end
 
 function M.handle_input(c)
   if c == 'l' then
-    M.dfa.direct_input_hfc.enter()
+    M.dfa.go_to_direct_input_hfc_state()
     return ''
 
   elseif c == 'q' then
+    -- TODO convert reading to katakana and finalize
+    g_common.remove_inverted_triangle(get_reading_len())
     M.dfa.go_to_direct_input_kana_state()
     return ''
 
@@ -111,7 +135,10 @@ function M.handle_input(c)
         return ''
       else
         -- delete reading and go to select kanji state
-        local kanji = M.dfa.go_to_select_kanji_state()
+        local kanji = M.dfa.go_to_select_kanji_state({
+          reading = M.reading,
+          accompanying_kana = M.accompanying_kana,
+        })
         local replacement = '▼' .. kanji
 
         local reading_len = get_reading_len()
@@ -128,7 +155,7 @@ function M.handle_input(c)
 
     if M.curr_input_mode == InputMode.Reading then
       if is_letter then
-        M.reading = M.reading .. value
+        table.insert(M.reading, value)
       end
       return value
 
@@ -148,36 +175,6 @@ function M.handle_input(c)
     end
   end
 end
-
---[[
-local function reading_buf_filter(letter)
-
-  elseif g_curr_kana_mode == KanaMode.InputAccompanyingKana then
-    -- only one letter can be in g_accompanying_kana
-    if g_accompaying_kana == '' then
-      -- accompanying kana is set. start selecting kanji
-      g_accompaying_kana = letter
-      return go_to_select_kanji_mode_and_return_first_kanji()
-
-    else
-      -- accompanying kana has already be given
-      -- finalize kanji and treat the letter as direct input
-      remove_kanji_selection_marker()
-      go_to_direct_input_mode()
-      return letter
-    end
-
-  elseif g_curr_kana_mode == KanaMode.SelectKanji then
-    -- finalize kanji and treat the letter as direct input
-    remove_kanji_selection_marker()
-    go_to_direct_input_mode()
-    return letter
-
-  else
-    error('should not be visited. check code (6)')
-  end
-end
-]]
 
 return M
 
