@@ -3,7 +3,7 @@ local M = {
   curr_depth = 0,
 }
 
-local KanaType = {
+M.KanaType = {
   Hiragana = 1,
   Katakana = 2,
 }
@@ -18,11 +18,20 @@ M.TraverseResult = {
 }
 
 function M.set_hiragana()
-  g_curr_kana_type = KanaType.Hiragana
+  g_curr_kana_type = M.KanaType.Hiragana
 end
 
 function M.set_katakana()
-  g_curr_kana_type = KanaType.Katakana
+  g_curr_kana_type = M.KanaType.Katakana
+end
+
+function M.toggle_kana_type()
+  if g_curr_kana_type == M.KanaType.Katakana then
+    M.set_hiragana()
+  else
+    M.set_katakana()
+  end
+  return g_curr_kana_type
 end
 
 function M.init()

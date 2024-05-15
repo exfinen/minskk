@@ -45,8 +45,11 @@ function M.handle_input(c)
     return ''
 
   elseif c == 'q' then
-    g_kana_tree.set_katakana()
-    g_common.alert("Direct input (カタカナ)")
+    if g_kana_tree.toggle_kana_type() == g_kana_tree.KanaType.Hiragana then
+      g_common.alert("Direct input (ひらがな)")
+    else
+      g_common.alert("Direct input (カタカナ)")
+    end
     return ''
 
   elseif c == ';' then
