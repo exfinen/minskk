@@ -9,6 +9,7 @@ local KanaType = {
 }
 
 local g_kana_tree = require 'state/kana-tree/tree'
+local g_katakana_map = require 'state/kana-tree/katakana-map'
 local g_curr_kana_type = nil
 
 M.TraverseResult = {
@@ -37,6 +38,15 @@ end
 
 function M.at_the_root_node()
   return M.curr_node == g_kana_tree.root
+end
+
+function M.to_katakana(c)
+  local katakana = g_katakana_map.root[c]
+  if katakana then
+    return katakana
+  else
+    return c
+  end
 end
 
 function M.traverse(c)

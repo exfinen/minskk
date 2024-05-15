@@ -117,8 +117,19 @@ function M.handle_input(c)
     return ''
 
   elseif c == 'q' then
-    -- TODO convert reading to katakana and finalize
-    g_common.remove_inverted_triangle(get_reading_len())
+    -- TODO convert reading to katakana
+    local katakana = ''
+    for _, kc in ipairs(M.reading) do
+      katakana = katakana .. g_kana_tree.to_katakana(kc)
+    end
+
+    -- replace hiragana with katakana
+    local reading_len = get_reading_len()
+    g_common.delete_n_chars_before_cursor(reading_len, 0, katakana)
+
+    -- remove ▽
+    g_common.remove_inverted_triangle(reading_len)
+
     M.dfa.go_to_direct_input_kana_state()
     return ''
 

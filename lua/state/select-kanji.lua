@@ -86,18 +86,10 @@ function M.handle_bs()
   g_common.delete_n_chars_before_cursor(M.prev_candidate_len, 0, kanji)
 end
 
-local function get_reading_as_string()
-  local s = ''
-  for _, c in ipairs(M.reading) do
-    s = s .. c
-  end
-  return s
-end
-
 function M.handle_esc()
   -- go back to the input reading state w/o accompanying_kana 
   local a = '▼' .. get_curr_candidate()
-  local b = '▽' .. get_reading_as_string()
+  local b = '▽' .. g_common.join_str_array(M.reading)
   g_common.delete_n_chars_before_cursor(#a, 0, b)
 
   M.dfa.go_to_input_reading_state({
