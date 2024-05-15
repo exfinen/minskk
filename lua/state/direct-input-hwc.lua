@@ -2,15 +2,13 @@
 
 local M = {}
 
-local g_common = require 'common'
-
 function M.init(dfa, util)
   M.dfa = dfa
   M.util = util
 end
 
 function M.enter()
-  g_common.alert('Direct Input (Half-Width Chars)')
+  M.util.set_dfa_state(M.util.DFAState.DirectInput_HWC)
 end
 
 function M.handle_ctrl_j()
@@ -26,7 +24,6 @@ function M.handle_bs()
 end
 
 function M.handle_esc()
-  g_common.alert("ESC in DI hwc")
   M.util.disable()
 end
 

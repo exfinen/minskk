@@ -3,7 +3,6 @@
 local M = {}
 
 local g_converter = require 'state/conv-map/zen-alphanum'
-local g_common = require 'common'
 
 function M.init(dfa, util)
   M.dfa = dfa
@@ -11,7 +10,7 @@ function M.init(dfa, util)
 end
 
 function M.enter()
-  g_common.alert('Direct Input (Full-Width Chars)')
+  M.util.set_dfa_state(M.util.DFAState.DirectInput_FWC)
 end
 
 function M.handle_ctrl_j()
@@ -27,7 +26,6 @@ function M.handle_bs()
 end
 
 function M.handle_esc()
-  g_common.alert("ESC in DI fwc")
   M.util.disable()
 end
 

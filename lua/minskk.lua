@@ -3,6 +3,18 @@ local M = {
   is_enabled = false,
 }
 
+local g_common = require 'common'
+
+local DFAState = {
+  DirectInput_FWC = 1,
+  DirectInput_HWC = 2,
+  DirectInput_Hiragana = 3,
+  DirectInput_Katakana = 4,
+  InputReading_Reading = 5,
+  InputReading_AccompanyingKana = 6,
+  SelectKanji = 7,
+}
+
 local direct_input_kana_state = require 'state/direct-input-kana'
 local direct_input_hwc_state = require 'state/direct-input-hwc'
 local direct_input_fwc_state = require 'state/direct-input-fwc'
@@ -49,6 +61,26 @@ local function disable()
   end
 end
 
+local function set_dfa_state(state)
+  local msg
+  if state == DFAState.DirectInput_FWC then
+    msg = '全角英数'
+  elseif state == DFAState.DirectInput_HWC then
+    msg = '半角英数'
+  elseif state == DFAState.DirectInput_Hiragana then
+    msg = 'ひらがな'
+  elseif state == DFAState.DirectInput_Katakana then
+    msg = 'カタカナ'
+  elseif state == DFAState.InputReading_Reading then
+    msg = '漢字読み入力'
+  elseif state == DFAState.InputReading_AccompanyingKana then
+    msg = '送り仮名入力'
+  elseif state == DFAState.SelectKanji then
+    msg = '漢字変換'
+  end
+  g_common.alert(msg)
+end
+
 function M.init()
   vim.api.nvim_set_keymap("n", "<C-j>", "<ESC>:MinSKKEnable<CR>", { silent = true })
 
@@ -88,6 +120,8 @@ function M.init()
     bs = bs,
     cr = cr,
     disable = disable,
+    set_dfa_state = set_dfa_state,
+    DFAState = DFAState,
   }
   direct_input_hwc_state.init(dfa, util)
   direct_input_fwc_state.init(dfa, util)

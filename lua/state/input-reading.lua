@@ -27,7 +27,7 @@ function M.enter(inst)
   M.curr_input_mode = InputMode.Reading
   M.reading = inst.reading or {}
 
-  g_common.alert('Input Reading (Reading)')
+  M.util.set_dfa_state(M.util.DFAState.InputReading_Reading)
 end
 
 function M.go_to_accompanying_kana_mode()
@@ -47,14 +47,14 @@ local function handle_sticky_shift()
     -- if reading is empty, go back to direct input mode and type ';'
     if #M.reading == 0 then
       g_common.delete_n_chars_before_cursor(#'▽')
-      M.dfa.go_to_direct_input_hfc_state()
+      M.dfa.go_to_direct_input_hwc_state()
       return ';'
 
     else
       -- if currently entering reading, finalize the reading of kanji
       -- and start entering accompanying kana
       M.curr_input_mode = InputMode.AccompanyingKana
-      g_common.alert('Input Reading (Accompanying Kana)')
+      M.util.set_dfa_state(M.util.DFAState.InputReading_AccompanyingKana)
       return '*'
     end
   else

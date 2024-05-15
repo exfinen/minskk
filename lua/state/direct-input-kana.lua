@@ -4,7 +4,6 @@ local M = {}
 
 local g_kana_tree = require 'state/kana-tree/logic'
 local g_kana_tree_common = require 'state/kana-tree/common'
-local g_common = require 'common'
 
 function M.init(dfa, util)
   g_kana_tree.init()
@@ -16,7 +15,7 @@ function M.enter()
   g_kana_tree.go_to_root()
   g_kana_tree.set_hiragana()
 
-  g_common.alert('Direct Input (ひらがな)')
+  M.util.set_dfa_state(M.util.DFAState.DirectInput_Hiragana)
 end
 
 function M.handle_ctrl_j()
@@ -31,7 +30,6 @@ function M.handle_bs()
 end
 
 function M.handle_esc()
-  g_common.alert("BS in DI Kana")
   M.util.disable()
 end
 
@@ -46,9 +44,9 @@ function M.handle_input(c)
 
   elseif c == 'q' then
     if g_kana_tree.toggle_kana_type() == g_kana_tree.KanaType.Hiragana then
-      g_common.alert("Direct input (ひらがな)")
+      M.util.set_dfa_state(M.util.DFAState.DirectInput_Hiragana)
     else
-      g_common.alert("Direct input (カタカナ)")
+      M.util.set_dfa_state(M.util.DFAState.DirectInput_Katakana)
     end
     return ''
 

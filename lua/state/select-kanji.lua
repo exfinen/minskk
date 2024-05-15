@@ -127,7 +127,7 @@ function M.enter(inst)
   M.reading = inst.reading
   M.accompanying_kana = inst.accompanying_kana
 
-  g_common.alert('Select Kanji: ' .. g_common.join_str_array(M.reading) .. '*' .. M.accompanying_kana)
+  M.util.set_dfa_state(M.util.DFAState.SelectKanji)
 
   return get_next_candidate()
 end
