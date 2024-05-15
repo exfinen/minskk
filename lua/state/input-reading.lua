@@ -97,6 +97,10 @@ end
 
 local function handle_input_reading_mode(c)
   if c == 'l' then
+    -- remove ▽
+    local reading_len = get_reading_len()
+    g_common.remove_inverted_triangle(reading_len)
+
     M.dfa.go_to_direct_input_hfc_state()
     return ''
 
