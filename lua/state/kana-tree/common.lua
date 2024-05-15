@@ -16,6 +16,7 @@ function M.traverse(kana_tree, handle_input, c, no_del_upon_got_letter)
     return {
       ["value"] = letter,
       ["is_letter"] = true,
+      ["depth"] = depth,
     }
 
   elseif res["type"] == kana_tree.TraverseResult.MovedNext then

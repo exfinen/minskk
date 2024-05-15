@@ -16,6 +16,10 @@ This plugin is written fully from scratch using `Lua` and `Rust` and works on an
 - Half-width (hankaku) Alphanumeric Characters
 - Full-width (zenkaku) Alphabets
 
+## Known Issues
+- Conflicts with Telescope
+- Many edge cases still not yet covered
+
 ## TO BE SUPPORTED
 - Full-width (zenkaku) Symbols
 - Kanji Conversion

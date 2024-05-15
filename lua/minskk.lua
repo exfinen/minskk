@@ -74,7 +74,6 @@ function M.init()
 
   M.curr_state = direct_input_hwc_state
 
-  -- initialize dfa
   local dfa = {
     go_to_direct_input_hwc_state = go_to_direct_input_hwc_state,
     go_to_direct_input_fwc_state = go_to_direct_input_fwc_state,

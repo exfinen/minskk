@@ -1,7 +1,6 @@
 local M = {
   curr_input_mode = nil,
   reading = {},
-  ak_del_chars = '',
 }
 
 local g_kana_tree = require 'state/kana-tree/logic'
@@ -56,8 +55,6 @@ local function handle_sticky_shift()
       -- and start entering accompanying kana
       M.curr_input_mode = InputMode.AccompanyingKana
       g_common.alert('Input Reading (Accompanying Kana)')
-      M.ak_del_chars = ''
-
       return '*'
     end
   else
@@ -170,6 +167,7 @@ local function handle_input_accompanying_kana(c)
   local res = g_kana_tree_common.traverse(g_kana_tree, M.handle_input, c, true)
   local value = res["value"]
   local is_letter = res["is_letter"]
+  local depth = res["depth"]
 
   if is_letter then
     local kanji = M.dfa.go_to_select_kanji_state({
@@ -179,14 +177,13 @@ local function handle_input_accompanying_kana(c)
     local replacement = '▼' .. kanji
 
     local reading = g_common.join_str_array(M.reading)
-    local ak = '*' .. M.ak_del_chars
-    local all = '▽' .. reading .. ak
+    local ak = depth  -- ak = #'*' + depth - 1
+    local all_len = #('▽' .. reading) + ak
 
-    g_common.delete_n_chars_before_cursor(#all, 0, replacement, #ak)
+    g_common.delete_n_chars_before_cursor(all_len, 0, replacement, ak)
     return ''
 
   else
-    M.ak_del_chars = M.ak_del_chars .. value
     return value
   end
 end
