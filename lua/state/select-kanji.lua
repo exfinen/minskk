@@ -18,7 +18,7 @@ function M.init(dfa, util)
 end
 
 local this_file_dir = debug.getinfo(1, 'S').source:match("@?(.*/)")
-local rust_lib = g_ffi.load(this_file_dir .. "../../minskk-core/target/debug/libminskk.dylib")
+local rust_lib = g_ffi.load(this_file_dir .. "../../rust/target/debug/libminskk.dylib")
 
 local function build_candidates(reading, accompanying_kana)
   -- call rust function w/ reading and accompanying kane to get the list
