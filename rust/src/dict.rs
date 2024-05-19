@@ -435,11 +435,11 @@ mod tests {
     }
   }
 
-  #[ignore]
+  //#[ignore]
   #[test]
   pub fn trest_build() {
     let home = dirs::home_dir().expect("Failed to get the home dir");
-    let dict_file = home.join(".skk").join("SKK-JISYO.S");
+    let dict_file = home.join(".skk").join("SKK-JISYO.L");
 
     let start = std::time::Instant::now();
     let dict = Dict::build(&dict_file).unwrap();
@@ -447,7 +447,7 @@ mod tests {
 
     println!("Took {} ms to load", duration.as_millis());
 
-    let readings = vec!['け', 'っ', 'か'];
+    let readings = vec!['と', 'け', 'い'];
     match dict.look_up(&readings, &None) {
       None => println!("No candidate found"),
       Some(res) => println!("result: {}", res[0]),

@@ -29,7 +29,7 @@ This plugin is written fully from scratch using `Lua` and `Rust` and works on an
 ## Requirements
 - macOS (Linux will be supported)
 - [rustup](https://rustup.rs/)
-- [SKK-JISHO.S](http://openlab.jp/skk/dic/SKK-JISYO.S.gz) under `~/.skk`
+- [SKK-JISHO.L](http://openlab.jp/skk/dic/SKK-JISYO.L.gz) under `~/.skk`
 
 ## Installation
 Currently only manual installation is avaialble.
