@@ -63,7 +63,9 @@ impl Dict {
     // toks[1] is surrounded by '/'s
     for tok in toks[1].split('/') {
       if tok.len() > 0 {
-        kanjis.push(tok.to_owned()); 
+        // drop annotation if exists
+        let toks: Vec<&str> = tok.splitn(2, ';').collect();
+        kanjis.push(toks[0].to_owned()); 
       }
     }
 

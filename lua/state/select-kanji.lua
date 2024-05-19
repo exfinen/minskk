@@ -8,17 +8,19 @@ local g_common = require 'common'
 local g_ffi = require 'ffi'
 
 g_ffi.cdef[[
+  void init();
   void look_up(char** chars, char ac_kana, const size_t num_chars);
   void get_results(char** results, const size_t buf_size, const size_t offset, size_t* num_results);
 ]]
 
+local this_file_dir = debug.getinfo(1, 'S').source:match("@?(.*/)")
+local g_dict = g_ffi.load(this_file_dir .. "../../rust/target/debug/libminskk.dylib")
+
 function M.init(dfa, util)
   M.dfa = dfa
   M.util = util
+  g_dict.init();
 end
-
-local this_file_dir = debug.getinfo(1, 'S').source:match("@?(.*/)")
-local dict_lib = g_ffi.load(this_file_dir .. "../../rust/target/debug/libminskk.dylib")
 
 local function look_up(reading, ac_kana_letter, ac_kana_first_char)
   local chars = g_ffi.new("char*[?]", #reading)
@@ -30,7 +32,7 @@ local function look_up(reading, ac_kana_letter, ac_kana_first_char)
   end
 
   local ac_kana = g_ffi.new("char[1]", ac_kana_first_char:byte())
-  dict_lib.look_up(chars, ac_kana[0], #reading)
+  g_dict.look_up(chars, ac_kana[0], #reading)
 
   local buf_size = 50
   local offset = 0
@@ -42,7 +44,7 @@ local function look_up(reading, ac_kana_letter, ac_kana_first_char)
       results[i-1] = g_ffi.new("char[?]", buf_size)
   end
 
-  dict_lib.get_results(
+  g_dict.get_results(
     results,
     buf_size,
     offset,

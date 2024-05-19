@@ -62,6 +62,14 @@ pub extern "C" fn look_up(
 }
 
 #[no_mangle]
+pub extern "C" fn init() {
+  // invoke dictionary building
+  std::thread::spawn(move || {
+    let _ = &DICT.lock().unwrap();
+  });
+}
+
+#[no_mangle]
 // results: pointer to byte buffers. each buffer is expected to be large enough to hold a result
 // buf_size: size of the byte buffer
 // offset: start index of the results to return

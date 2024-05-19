@@ -18,12 +18,15 @@ This plugin is written fully from scratch using `Lua` and `Rust` and works on an
 - Kanji Conversion (with many issues)
 
 ## Known Issues
+- Lines disappear and cannot undo
 - Many UI edge cases still not addressed
 
 ## TO BE SUPPORTED
+- Back Space in Input Reading State
 - Full-width (zenkaku) Symbols
 - Local Dictionary
 - Word Completion
+- Annotation
 
 ## Requirements
 - macOS (Linux will be supported)
