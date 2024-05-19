@@ -1,6 +1,5 @@
 local M = {
   curr_candidate_index = 0,
-  prev_candidate_len = 0,
   candidates = {},
 }
 
@@ -63,8 +62,6 @@ local function get_curr_candidate()
 end
 
 local function get_next_candidate()
-  M.prev_candidate_len = #get_curr_candidate()
-
   -- update curr_candidate index
   M.curr_candidate_index = (M.curr_candidate_index + 1) % #M.candidates
 
@@ -72,8 +69,6 @@ local function get_next_candidate()
 end
 
 local function get_prev_candidate()
-  M.prev_candidate_len = #get_curr_candidate()
-
   -- update curr_candidate index
   if M.curr_candidate_index == 0 then
     M.curr_candidate_index = #M.candidates - 1
@@ -85,7 +80,7 @@ local function get_prev_candidate()
 end
 
 local function finalize()
-  g_common.remove_inverted_triangle(M.prev_candidate_len)
+  g_common.remove_inverted_triangle(#get_curr_candidate())
   M.dfa.go_to_direct_input_kana_state()
 end
 
@@ -99,8 +94,8 @@ end
 
 function M.handle_bs()
   -- show the previuos kanji candidate
-  local kanji = get_prev_candidate()
-  g_common.delete_n_chars_before_cursor(M.prev_candidate_len, 0, kanji)
+  local candidate = get_prev_candidate()
+  g_common.delete_n_chars_before_cursor(#get_curr_candidate(), 0, candidate)
 end
 
 function M.handle_esc()
@@ -116,14 +111,15 @@ end
 
 function M.handle_input(c)
   if c == ' ' then
-    -- show the next kanji candidate
-    local kanji = get_next_candidate()
-    g_common.delete_n_chars_before_cursor(M.prev_candidate_len, 0, kanji)
+    -- show the next candidate
+    local curr_candidate_len = #get_curr_candidate()
+    local candidate = get_next_candidate()
+    g_common.delete_n_chars_before_cursor(curr_candidate_len, 0, candidate)
     return ''
 
   elseif c == ';' then
     -- select the current candidate
-    g_common.remove_inverted_triangle(M.prev_candidate_len)
+    g_common.remove_inverted_triangle(#get_curr_candidate())
 
     -- start entering the next readings
     M.dfa.go_to_input_reading_state()
@@ -131,7 +127,7 @@ function M.handle_input(c)
 
   else
     -- select the current candidate
-    g_common.remove_inverted_triangle(M.prev_candidate_len)
+    g_common.remove_inverted_triangle(#get_curr_candidate())
 
     -- start entering kana directly
     M.dfa.go_to_direct_input_kana_state()
@@ -155,7 +151,6 @@ function M.enter(inst)
   end
 
   M.curr_candidate_index = #M.candidates - 1 -- point to the last element in the beginning
-  M.prev_candidate_len = 0
   M.reading = inst.reading
 
   M.util.set_dfa_state(M.util.DFAState.SelectKanji)

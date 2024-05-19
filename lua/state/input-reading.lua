@@ -137,14 +137,14 @@ local function handle_input_reading_mode(c)
         return ''
       else
         -- delete reading and go to select kanji state
-        local kanji = M.dfa.go_to_select_kanji_state({
+        local candidate = M.dfa.go_to_select_kanji_state({
           reading = M.reading,
           ac_kana_letter = '',
           ac_kana_first_char = ' ', -- ' ' means None
         })
         -- if there are candidates, show the first candidate
-        if kanji then
-          local replacement = '▼' .. kanji
+        if candidate then
+          local replacement = '▼' .. candidate
           local target = '▽' .. g_common.join_str_array(M.reading)
 
           g_common.delete_n_chars_before_cursor(#target, 0, replacement)
@@ -180,18 +180,25 @@ local function handle_input_ac_kana(c)
   local depth = res["depth"]
 
   if is_letter then
-    local kanji = M.dfa.go_to_select_kanji_state({
+    local candidate = M.dfa.go_to_select_kanji_state({
       reading = M.reading,
       ac_kana_letter = value,
       ac_kana_first_char = M.ac_kana_first_char,
     })
-    local replacement = '▼' .. kanji
+    -- if there are candidates, show the first candidate
+    if candidate then
+      local replacement = '▼' .. candidate
 
-    local reading = g_common.join_str_array(M.reading)
-    local ak = depth  -- ak = #'*' + depth - 1
-    local all_len = #('▽' .. reading) + ak
+      local reading = g_common.join_str_array(M.reading)
+      local ak = depth  -- ak = #'*' + depth - 1
+      local all_len = #('▽' .. reading) + ak
 
-    g_common.delete_n_chars_before_cursor(all_len, 0, replacement, ak)
+      g_common.delete_n_chars_before_cursor(all_len, 0, replacement, ak)
+    else
+      -- otherwise, start entering ac_kana again
+      g_kana_tree.go_to_root()
+      g_common.delete_n_chars_before_cursor(depth - 1, 0)
+    end
     return ''
 
   else

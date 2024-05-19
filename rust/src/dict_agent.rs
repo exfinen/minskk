@@ -9,7 +9,7 @@ use std::ptr;
 static DICT: Lazy<Mutex<Dict>> = Lazy::new(|| {
   let home = dirs::home_dir()
     .expect("Failed to get the home dir");
-  let dict_file = home.join(".skk").join("SKK-JISYO.S");
+  let dict_file = home.join(".skk").join("SKK-JISYO.L");
   
   Mutex::new(Dict::build(&dict_file)
     .expect("Error: Failed to load a dictionary"))
