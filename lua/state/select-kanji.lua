@@ -9,7 +9,8 @@ local g_common = require 'common'
 local g_ffi = require 'ffi'
 
 g_ffi.cdef[[
-  size_t get_kanji(const char* buf, const size_t buf_size);
+  void look_up(char** chars, const size_t num_chars);
+  void get_results(char** results, const size_t buf_size, const size_t offset, size_t* num_results);
 ]]
 
 function M.init(dfa, util)
@@ -18,29 +19,42 @@ function M.init(dfa, util)
 end
 
 local this_file_dir = debug.getinfo(1, 'S').source:match("@?(.*/)")
-local rust_lib = g_ffi.load(this_file_dir .. "../../rust/target/debug/libminskk.dylib")
+local dict_lib = g_ffi.load(this_file_dir .. "../../rust/target/debug/libminskk.dylib")
 
-local function build_candidates(reading, accompanying_kana)
-  -- call rust function w/ reading and accompanying kane to get the list
-  --[[
-    local buf_size = 50
-    local buf = g_ffi.new("char[?]", buf_size)
+local function look_up(reading, accompanying_kana)
+  local chars = g_ffi.new("char*[?]", #reading)
 
-    local num_chars = rust_lib.get_kanji(buf, buf_size)
-    if num_chars > buf_size then
-      buf = g_ffi.new("char[?]", num_chars)
-      num_chars = rust_lib.get_kanji(buf, num_chars)
-    end
-    return g_ffi.string(buf, num_chars)
-  ]]
+  for i = 1, #reading do
+      -- + 1 for null termination. no need to set 0 since luajit zero-fills the array
+      chars[i-1] = g_ffi.new("char[?]", #reading[i] + 1)
+      g_ffi.copy(chars[i-1], reading[i])
+  end
+  dict_lib.look_up(chars, #reading)
 
-  M.candidates = {
-    "候補１" .. accompanying_kana,
-    "候補２" .. accompanying_kana,
-    "候補３" .. accompanying_kana,
-    "候補４" .. accompanying_kana,
-    "候補５" .. accompanying_kana,
-  }
+  local buf_size = 50
+  local offset = 0
+  local num_bufs = 3
+  local num_results = g_ffi.new("size_t[1]", num_bufs)
+
+  local results = g_ffi.new("char*[?]", num_bufs)
+  for i = 1, num_bufs do
+      results[i-1] = g_ffi.new("char[?]", buf_size)
+  end
+
+  dict_lib.get_results(
+    results,
+    buf_size,
+    offset,
+    num_results
+  );
+
+  M.candidates = {};
+  print(tostring(num_results[0]))
+
+  for i = 1, tonumber(num_results[0]) do
+    local candidate = g_ffi.string(results[i-1])
+    table.insert(M.candidates, candidate)
+  end
 end
 
 local function get_curr_candidate()
@@ -119,7 +133,7 @@ end
 
 function M.enter(inst)
   -- TODO handle empty list case
-  build_candidates(inst.reading, inst.accompanying_kana)
+  look_up(inst.reading, inst.accompanying_kana)
 
   M.curr_candidate_index = #M.candidates - 1 -- point to the last element in the beginning
   M.prev_candidate_len = 0

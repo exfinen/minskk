@@ -1,5 +1,11 @@
-use std::io::{self, Result};
-use std::collections::HashMap;
+use std::{
+  collections::HashMap,
+  fs::File,
+  io::{self, BufRead, Result},
+  path::PathBuf,
+};
+
+use encoding_rs::EUC_JP;
 
 pub struct Node {
   children: HashMap<char,Node>,
@@ -134,6 +140,32 @@ impl Dict {
       };
     }
     node.kanjis.get(acc_kana)
+  }
+  
+  pub fn build(path: &PathBuf) -> io::Result<Dict> {
+    if !path.exists() {
+      return Err(io::Error::new(
+          io::ErrorKind::NotFound,
+          format!("{:?} does not exist", path)
+      ));
+    }
+    let file = File::open(&path)?;
+    let mut reader = io::BufReader::new(file);
+    let mut dict = Dict::new();
+
+    while {
+      let mut buf = Vec::<u8>::new();
+      if reader.read_until(0x0a as u8, &mut buf)? == 0 {
+        false
+      } else {
+        let res = EUC_JP.decode(&buf);
+        let line = res.0.trim_end_matches("\n");
+        dict.add_dict_file_line(line)?;
+        true
+      }
+    } {}
+
+    Ok(dict)
   }
 }
 
@@ -401,6 +433,19 @@ mod tests {
     if dict.look_up(&readings, &Some('w')).is_some() {
       assert!(false);
     }
+  }
+
+  #[ignore]
+  #[test]
+  pub fn trest_build() {
+    let home = dirs::home_dir().expect("Failed to get the home dir");
+    let dict_file = home.join(".skk").join("SKK-JISYO.S");
+
+    let start = std::time::Instant::now();
+    Dict::build(&dict_file).unwrap();
+    let duration = start.elapsed();
+
+    println!("Took {} ms", duration.as_millis());
   }
 }
 
