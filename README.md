@@ -2,7 +2,7 @@
 
 Minimalist Neovim plugin SKK implementation aiming to be functional on [DM250](https://www.kingjim.co.jp/pomera/dm250/).
 
-Being minimalist, the plugin is non-configurable and works out of the box with a sticky shift setting.
+Being minimalist, the plugin is mostly not configurable and works out of the box with a sticky shift setting.
 
 **Status:** **Work in Progress**
 
@@ -27,6 +27,7 @@ This plugin is written fully from scratch using `Lua` and `Rust` and works on an
 - Local Dictionary
 - Word Completion
 - Annotation
+- Candidate Selection Dialog
 
 ## Requirements
 - macOS (Linux will be supported)
@@ -42,4 +43,11 @@ $ git clone https://github.com/exfinen/minskk.git
 $ cd rust
 $ cargo build
 ```
+
+## Configuration
+1. `minskk_statusline` is exposed to get the current state the plugin is in. e.g. the following adds the minskk state to the status line.
+
+   ```vim
+set statusline+=%{v:lua.minskk_statusline()}
+   ```
 

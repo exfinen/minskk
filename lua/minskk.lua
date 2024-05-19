@@ -1,9 +1,8 @@
 local M = {
   curr_state = nil,
   is_enabled = false,
+  status = nil,
 }
-
-local g_common = require 'common'
 
 local DFAState = {
   DirectInput_FWC = 1,
@@ -62,23 +61,25 @@ local function disable()
 end
 
 local function set_dfa_state(state)
-  local msg
   if state == DFAState.DirectInput_FWC then
-    msg = '全角英数'
+    M.status = '全角英数'
   elseif state == DFAState.DirectInput_HWC then
-    msg = '半角英数'
+    M.status = '半角英数'
   elseif state == DFAState.DirectInput_Hiragana then
-    msg = 'ひらがな'
+    M.status = 'ひらがな'
   elseif state == DFAState.DirectInput_Katakana then
-    msg = 'カタカナ'
+    M.status = 'カタカナ'
   elseif state == DFAState.InputReading_Reading then
-    msg = '漢字読み入力'
+    M.status = '漢字読み'
   elseif state == DFAState.InputReading_AcKana then
-    msg = '送り仮名入力'
+    M.status = '送り仮名'
   elseif state == DFAState.SelectKanji then
-    msg = '漢字変換'
+    M.status = '漢字変換'
   end
-  -- g_common.alert(msg)
+end
+
+function _G.minskk_statusline()
+  return M.status
 end
 
 function M.init()
