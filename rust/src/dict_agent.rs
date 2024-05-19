@@ -28,14 +28,18 @@ pub extern "C" fn look_up(
     std::slice::from_raw_parts(chars, num_chars)
   };
 
-  let mut readings = vec![];
+  let mut reading = vec![];
   for &c_str_ptr in strings_slice.iter() {
     let c_str = unsafe {
       assert!(!c_str_ptr.is_null(), "string pointer is null");
       std::ffi::CStr::from_ptr(c_str_ptr)
     };
     match c_str.to_str() {
-      Ok(s) => readings.push(s.chars().nth(0).unwrap()),
+      Ok(s) => {
+        for c in s.chars() {
+          reading.push(c);
+        }
+      },
       Err(e) => panic!("Failed to convert to Rust string: {e}"),
     }
   }
@@ -45,12 +49,12 @@ pub extern "C" fn look_up(
   let ac_kana = {
     let ac_kana = ac_kana as u8 as char;
     if ac_kana  == ' ' {
-       None
+      None
     } else {
       Some(ac_kana)
     }
   };
-  if let Some(res) = dict.look_up(&readings, &ac_kana) {
+  if let Some(res) = dict.look_up(&reading, &ac_kana) {
     for s in res {
       RESULT_CACHE.lock().unwrap().push(s.to_string());
     }

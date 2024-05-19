@@ -442,10 +442,16 @@ mod tests {
     let dict_file = home.join(".skk").join("SKK-JISYO.S");
 
     let start = std::time::Instant::now();
-    Dict::build(&dict_file).unwrap();
+    let dict = Dict::build(&dict_file).unwrap();
     let duration = start.elapsed();
 
-    println!("Took {} ms", duration.as_millis());
+    println!("Took {} ms to load", duration.as_millis());
+
+    let readings = vec!['け', 'っ', 'か'];
+    match dict.look_up(&readings, &None) {
+      None => println!("No candidate found"),
+      Some(res) => println!("result: {}", res[0]),
+    };
   }
 }
 

@@ -78,7 +78,7 @@ local function set_dfa_state(state)
   elseif state == DFAState.SelectKanji then
     msg = '漢字変換'
   end
-  g_common.alert(msg)
+  -- g_common.alert(msg)
 end
 
 function M.init()
