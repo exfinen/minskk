@@ -35,6 +35,10 @@ function M.go_to_ac_kana_mode()
   M.curr_input_mode = InputMode.AcKana
 end
 
+local function remove_inverted_triangle(following_chars_len)
+  g_common.delete_n_chars_before_cursor(#'▽', following_chars_len)
+end
+
 local function get_reading_len()
   local reading_len = 0
   for _, c in ipairs(M.reading) do
@@ -64,12 +68,12 @@ local function handle_sticky_shift()
 end
 
 function M.handle_ctrl_j()
-  g_common.remove_inverted_triangle(get_reading_len())
+  remove_inverted_triangle(get_reading_len())
   M.dfa.go_to_direct_input_kana_state()
 end
 
 function M.handle_cr()
-  g_common.remove_inverted_triangle(get_reading_len())
+  remove_inverted_triangle(get_reading_len())
   M.dfa.go_to_direct_input_kana_state()
 end
 
@@ -80,7 +84,7 @@ function M.handle_bs()
     vim.api.nvim_feedkeys(M.util.bs, "in", true)
   else
     -- go back to direct input kana state if there is no char to delete
-    g_common.remove_inverted_triangle(0)
+    remove_inverted_triangle(0)
     M.dfa.go_to_direct_input_kana_state()
   end
 end
@@ -92,11 +96,6 @@ function M.handle_esc()
   M.reading = {}
 
   M.dfa.go_to_direct_input_kana_state()
-end
-
-local function remove_inverted_triangle()
-  local reading_len = get_reading_len()
-  g_common.remove_inverted_triangle(reading_len)
 end
 
 local function handle_input_reading_mode(c)
@@ -117,10 +116,10 @@ local function handle_input_reading_mode(c)
     end
 
     -- replace hiragana w/ corresponding katakana
-    local reading_len = get_reading_len()
-    g_common.delete_n_chars_before_cursor(reading_len, 0, katakana)
+    g_common.delete_n_chars_before_cursor(
+      #'▽' + get_reading_len(), 0, katakana
+    )
 
-    remove_inverted_triangle()
     M.dfa.go_to_direct_input_kana_state()
     return ''
 

@@ -11,15 +11,11 @@ function M.init(dfa, util)
   M.util = util
 end
 
-function M.enter(c)
+function M.enter()
   g_kana_tree.go_to_root()
   g_kana_tree.set_hiragana()
 
   M.util.set_dfa_state(M.util.DFAState.DirectInput_Hiragana)
-
-  if c then
-    M.handle_input(c)
-  end
 end
 
 function M.handle_ctrl_j()

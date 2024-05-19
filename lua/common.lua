@@ -34,10 +34,6 @@ function M.delete_n_chars_before_cursor(n, offset, replacement, suffix_len)
   end)
 end
 
-function M.remove_inverted_triangle(following_chars_len)
-  M.delete_n_chars_before_cursor(#'▽', following_chars_len)
-end
-
 function M.join_str_array(array)
   local s = ''
   for _, c in ipairs(array) do

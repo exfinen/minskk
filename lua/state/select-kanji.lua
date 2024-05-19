@@ -63,6 +63,11 @@ local function get_curr_candidate()
   return M.candidates[M.curr_candidate_index + 1]
 end
 
+local function remove_inverted_triangle()
+  local following_chars_len = #get_curr_candidate()
+  g_common.delete_n_chars_before_cursor(#'▼', following_chars_len)
+end
+
 local function get_next_candidate()
   -- update curr_candidate index
   M.curr_candidate_index = (M.curr_candidate_index + 1) % #M.candidates
@@ -82,12 +87,12 @@ local function get_prev_candidate()
 end
 
 function M.handle_ctrl_j()
-  g_common.remove_inverted_triangle(#get_curr_candidate())
+  remove_inverted_triangle()
   M.dfa.go_to_direct_input_kana_state()
 end
 
 function M.handle_cr()
-  g_common.remove_inverted_triangle(#get_curr_candidate())
+  remove_inverted_triangle()
   M.dfa.go_to_direct_input_kana_state()
 end
 
@@ -118,16 +123,17 @@ function M.handle_input(c)
 
   elseif c == ';' then
     -- select the current candidate
-    g_common.remove_inverted_triangle(#get_curr_candidate())
+    remove_inverted_triangle()
 
     -- start entering the next readings
     M.dfa.go_to_input_reading_state()
     return '▽'
 
   else
-    g_common.remove_inverted_triangle(#get_curr_candidate())
-    M.dfa.go_to_direct_input_kana_state(c)
-    return c
+    remove_inverted_triangle()
+    M.dfa.go_to_direct_input_kana_state()
+    vim.api.nvim_feedkeys(c, "in", true)
+    return ''
   end
 end
 
