@@ -25,3 +25,19 @@ This plugin is written fully from scratch using `Lua` and `Rust` and works on an
 - Full-width (zenkaku) Symbols
 - Local Dictionary
 - Word Completion
+
+## Requirements
+- macOS (Linux will be supported)
+- [rustup](https://rustup.rs/)
+- [SKK-JISHO.S](http://openlab.jp/skk/dic/SKK-JISYO.S.gz) under `~/.skk`
+
+## Installation
+Currently only manual installation is avaialble.
+
+```bash
+$ cd ~/.config/nvim/pack/plugins/start
+$ git clone https://github.com/exfinen/minskk.git
+$ cd rust
+$ cargo build
+```
+

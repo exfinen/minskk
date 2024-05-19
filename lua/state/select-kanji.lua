@@ -35,7 +35,7 @@ local function look_up(reading, ac_kana_letter, ac_kana_first_char)
 
   local buf_size = 50
   local offset = 0
-  local num_bufs = 3
+  local num_bufs = 10
   local num_results = g_ffi.new("size_t[1]", num_bufs)
 
   local results = g_ffi.new("char*[?]", num_bufs)
@@ -122,12 +122,19 @@ function M.handle_input(c)
     return ''
 
   elseif c == ';' then
-    -- select the current kanji and start entering the next word
+    -- select the current candidate
     g_common.remove_inverted_triangle(M.prev_candidate_len)
+
+    -- start entering the next readings
     M.dfa.go_to_input_reading_state()
     return '▽'
 
   else
+    -- select the current candidate
+    g_common.remove_inverted_triangle(M.prev_candidate_len)
+
+    -- start entering kana directly
+    M.dfa.go_to_direct_input_kana_state()
     return ''
   end
 end
