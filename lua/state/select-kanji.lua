@@ -79,17 +79,14 @@ local function get_prev_candidate()
   return get_curr_candidate()
 end
 
-local function finalize()
+function M.handle_ctrl_j()
   g_common.remove_inverted_triangle(#get_curr_candidate())
   M.dfa.go_to_direct_input_kana_state()
 end
 
-function M.handle_ctrl_j()
-  finalize()
-end
-
 function M.handle_cr()
-  finalize()
+  g_common.remove_inverted_triangle(#get_curr_candidate())
+  M.dfa.go_to_direct_input_kana_state()
 end
 
 function M.handle_bs()
@@ -126,12 +123,9 @@ function M.handle_input(c)
     return '▽'
 
   else
-    -- select the current candidate
     g_common.remove_inverted_triangle(#get_curr_candidate())
-
-    -- start entering kana directly
-    M.dfa.go_to_direct_input_kana_state()
-    return ''
+    M.dfa.go_to_direct_input_kana_state(c)
+    return c
   end
 end
 

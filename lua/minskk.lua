@@ -31,9 +31,9 @@ local function go_to_direct_input_fwc_state()
   M.curr_state.enter()
 end
 
-local function go_to_direct_input_kana_state()
+local function go_to_direct_input_kana_state(c)
   M.curr_state = direct_input_kana_state
-  M.curr_state.enter()
+  M.curr_state.enter(c)
 end
 
 local function go_to_input_reading_state(inst)
