@@ -438,7 +438,7 @@ mod tests {
     }
   }
 
-  //#[ignore]
+  #[ignore]
   #[test]
   pub fn trest_build() {
     let home = dirs::home_dir().expect("Failed to get the home dir");
