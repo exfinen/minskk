@@ -48,6 +48,6 @@ $ cargo build
 1. `minskk_statusline` is exposed to get the current state the plugin is in. e.g. the following adds the minskk state to the status line.
 
    ```vim
-set statusline+=%{v:lua.minskk_statusline()}
+   set statusline+=%{v:lua.minskk_statusline()}
    ```
 
