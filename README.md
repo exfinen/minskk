@@ -15,6 +15,7 @@ This plugin is written fully from scratch using `Lua` and `Rust` and works on an
 - Katakana
 - Half-width (hankaku) Alphanumeric Characters
 - Full-width (zenkaku) Alphabets
+- Kanji Conversion (with many issues)
 
 ## Known Issues
 - Conflicts with Telescope
@@ -22,6 +23,5 @@ This plugin is written fully from scratch using `Lua` and `Rust` and works on an
 
 ## TO BE SUPPORTED
 - Full-width (zenkaku) Symbols
-- Kanji Conversion
 - Local Dictionary
-
+- Word Completion

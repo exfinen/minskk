@@ -1,7 +1,7 @@
 local M = {
   curr_candidate_index = 0,
   prev_candidate_len = 0,
-  kanji_list = {},
+  candidates = {},
 }
 
 local g_common = require 'common'
@@ -9,7 +9,7 @@ local g_common = require 'common'
 local g_ffi = require 'ffi'
 
 g_ffi.cdef[[
-  void look_up(char** chars, const size_t num_chars);
+  void look_up(char** chars, char ac_kana, const size_t num_chars);
   void get_results(char** results, const size_t buf_size, const size_t offset, size_t* num_results);
 ]]
 
@@ -21,7 +21,7 @@ end
 local this_file_dir = debug.getinfo(1, 'S').source:match("@?(.*/)")
 local dict_lib = g_ffi.load(this_file_dir .. "../../rust/target/debug/libminskk.dylib")
 
-local function look_up(reading, accompanying_kana)
+local function look_up(reading, ac_kana_letter, ac_kana_first_char)
   local chars = g_ffi.new("char*[?]", #reading)
 
   for i = 1, #reading do
@@ -29,7 +29,9 @@ local function look_up(reading, accompanying_kana)
       chars[i-1] = g_ffi.new("char[?]", #reading[i] + 1)
       g_ffi.copy(chars[i-1], reading[i])
   end
-  dict_lib.look_up(chars, #reading)
+
+  local ac_kana = g_ffi.new("char[1]", ac_kana_first_char:byte())
+  dict_lib.look_up(chars, ac_kana[0], #reading)
 
   local buf_size = 50
   local offset = 0
@@ -49,11 +51,10 @@ local function look_up(reading, accompanying_kana)
   );
 
   M.candidates = {};
-  print(tostring(num_results[0]))
 
   for i = 1, tonumber(num_results[0]) do
     local candidate = g_ffi.string(results[i-1])
-    table.insert(M.candidates, candidate)
+    table.insert(M.candidates, candidate .. ac_kana_letter)
   end
 end
 
@@ -103,7 +104,7 @@ function M.handle_bs()
 end
 
 function M.handle_esc()
-  -- go back to the input reading state w/o accompanying_kana 
+  -- go back to the input reading state w/o ac_kana 
   local a = '▼' .. get_curr_candidate()
   local b = '▽' .. g_common.join_str_array(M.reading)
   g_common.delete_n_chars_before_cursor(#a, 0, b)
@@ -131,15 +132,24 @@ function M.handle_input(c)
   end
 end
 
+-- returns the first candidate to display
+-- or returns nil and goes back to input reading state
+-- in case no candidate is found
 function M.enter(inst)
-  -- TODO handle empty list case
-  look_up(inst.reading, inst.accompanying_kana)
+  look_up(
+    inst.reading,
+    inst.ac_kana_letter,
+    inst.ac_kana_first_char
+  )
+  if #M.candidates == 0 then
+    -- TODO support word registration
+    M.dfa.go_to_input_reading_state(inst)
+    return nil
+  end
 
   M.curr_candidate_index = #M.candidates - 1 -- point to the last element in the beginning
   M.prev_candidate_len = 0
-
   M.reading = inst.reading
-  M.accompanying_kana = inst.accompanying_kana
 
   M.util.set_dfa_state(M.util.DFAState.SelectKanji)
 

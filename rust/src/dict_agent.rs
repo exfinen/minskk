@@ -20,6 +20,7 @@ static RESULT_CACHE: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(vec![]))
 #[no_mangle]
 pub extern "C" fn look_up(
   chars: *mut *mut c_char,
+  ac_kana: c_char,
   num_chars: size_t
 ) {
   let strings_slice = unsafe {
@@ -41,7 +42,15 @@ pub extern "C" fn look_up(
   RESULT_CACHE.lock().unwrap().clear();
 
   let dict = &DICT.lock().unwrap();
-  if let Some(res) = dict.look_up(&readings, &None) {
+  let ac_kana = {
+    let ac_kana = ac_kana as u8 as char;
+    if ac_kana  == ' ' {
+       None
+    } else {
+      Some(ac_kana)
+    }
+  };
+  if let Some(res) = dict.look_up(&readings, &ac_kana) {
     for s in res {
       RESULT_CACHE.lock().unwrap().push(s.to_string());
     }

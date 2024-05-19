@@ -11,7 +11,7 @@ local DFAState = {
   DirectInput_Hiragana = 3,
   DirectInput_Katakana = 4,
   InputReading_Reading = 5,
-  InputReading_AccompanyingKana = 6,
+  InputReading_AcKana = 6,
   SelectKanji = 7,
 }
 
@@ -73,7 +73,7 @@ local function set_dfa_state(state)
     msg = 'カタカナ'
   elseif state == DFAState.InputReading_Reading then
     msg = '漢字読み入力'
-  elseif state == DFAState.InputReading_AccompanyingKana then
+  elseif state == DFAState.InputReading_AcKana then
     msg = '送り仮名入力'
   elseif state == DFAState.SelectKanji then
     msg = '漢字変換'
