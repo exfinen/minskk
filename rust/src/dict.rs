@@ -44,8 +44,9 @@ impl Dict {
       return None;
     }
 
-    let toks: Vec<&str> = line.split_whitespace().collect();
+    let toks: Vec<&str> = line.splitn(2, ' ').collect();
     if toks.len() != 2 {
+      println!("X {}: {line}", toks.len());
       return None;
     }
     

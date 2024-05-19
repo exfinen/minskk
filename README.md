@@ -18,8 +18,7 @@ This plugin is written fully from scratch using `Lua` and `Rust` and works on an
 - Kanji Conversion (with many issues)
 
 ## Known Issues
-- Conflicts with Telescope
-- Many edge cases still not yet covered
+- Many UI edge cases still not addressed
 
 ## TO BE SUPPORTED
 - Full-width (zenkaku) Symbols
