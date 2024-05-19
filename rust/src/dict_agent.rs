@@ -6,10 +6,13 @@ use std::sync::Mutex;
 use std::slice;
 use std::ptr;
 
-static _DICT: Lazy<Dict> = Lazy::new(|| {
-  let home = dirs::home_dir().expect("Failed to get the home dir");
+static DICT: Lazy<Mutex<Dict>> = Lazy::new(|| {
+  let home = dirs::home_dir()
+    .expect("Failed to get the home dir");
   let dict_file = home.join(".skk").join("SKK-JISYO.S");
-  Dict::build(&dict_file).expect("Error: Failed to load a dictionary")
+  
+  Mutex::new(Dict::build(&dict_file)
+    .expect("Error: Failed to load a dictionary"))
 });
 
 static RESULT_CACHE: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(vec![]));
@@ -24,27 +27,24 @@ pub extern "C" fn look_up(
     std::slice::from_raw_parts(chars, num_chars)
   };
 
+  let mut readings = vec![];
   for &c_str_ptr in strings_slice.iter() {
     let c_str = unsafe {
       assert!(!c_str_ptr.is_null(), "string pointer is null");
       std::ffi::CStr::from_ptr(c_str_ptr)
     };
     match c_str.to_str() {
-      Ok(_) => (),
-      Err(e) => eprintln!("Failed to convert C string to Rust string: {e}"),
+      Ok(s) => readings.push(s.chars().nth(0).unwrap()),
+      Err(e) => panic!("Failed to convert to Rust string: {e}"),
     }
   }
-
-  let res = vec![
-    "候補１",
-    "候補２",
-    "候補３",
-    "候補４",
-    "候補５",
-  ];
   RESULT_CACHE.lock().unwrap().clear();
-  for s in res {
-    RESULT_CACHE.lock().unwrap().push(s.to_string());
+
+  let dict = &DICT.lock().unwrap();
+  if let Some(res) = dict.look_up(&readings, &None) {
+    for s in res {
+      RESULT_CACHE.lock().unwrap().push(s.to_string());
+    }
   }
 }
 
