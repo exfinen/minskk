@@ -7,11 +7,13 @@ use std::{
 
 use encoding_rs::EUC_JP;
 
+#[derive(Debug)]
 pub struct Node {
   children: HashMap<char,Node>,
   kanjis: HashMap<Option<char>, Vec<String>>,
 }
 
+#[derive(Debug)]
 pub struct Dict {
   root: Node,
 }

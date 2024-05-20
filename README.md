@@ -17,6 +17,7 @@ This plugin is written fully from scratch using `Rust` for the dictionary relate
 
 ## Known Issues
 - Lines disappear and cannot undo
+- neovim quietly dies upon rust panic
 
 ## TO BE IMPLEMENTED
 - Full-width (zenkaku) Symbol entry

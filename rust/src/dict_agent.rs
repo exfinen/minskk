@@ -1,24 +1,20 @@
 use crate::dict::Dict;
 
 use libc::{c_char, size_t};
-use once_cell::sync::Lazy;
+use once_cell::sync::{Lazy, OnceCell};
 use std::{
+  ffi::CStr,
+  path::PathBuf,
   ptr,
   slice,
+  str::FromStr,
   sync::Mutex,
   thread,
 };
 
-static DICT: Lazy<Mutex<Dict>> = Lazy::new(|| {
-  let home = dirs::home_dir()
-    .expect("Failed to get the home dir");
-  let dict_file = home.join(".skk").join("SKK-JISYO.L");
-  
-  Mutex::new(Dict::build(&dict_file)
-    .expect("Error: Failed to load a dictionary"))
-});
-
-static RESULT_CACHE: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(vec![]));
+static DICT: OnceCell<Mutex<Dict>> = OnceCell::new();
+static RESULT_CACHE: Lazy<Mutex<Vec<String>>> =
+  Lazy::new(|| Mutex::new(vec![]));
 
 #[no_mangle]
 pub extern "C" fn look_up(
@@ -48,7 +44,7 @@ pub extern "C" fn look_up(
   }
   RESULT_CACHE.lock().unwrap().clear();
 
-  let dict = &DICT.lock().unwrap();
+  let dict = &DICT.get().unwrap().lock().unwrap();
   let ac_kana = {
     let ac_kana = ac_kana as u8 as char;
     if ac_kana  == ' ' {
@@ -65,10 +61,24 @@ pub extern "C" fn look_up(
 }
 
 #[no_mangle]
-pub extern "C" fn init() {
-  // invoke dictionary building
+pub extern "C" fn init(
+  dict_file_path: *const c_char,
+) {
+  let dict_file_path = unsafe {
+    CStr::from_ptr(dict_file_path).to_str().unwrap()
+  }.to_string();
+  
+  let dict_file_path = PathBuf::from_str(&dict_file_path).expect(
+    &format!("Malformed path: {:?}", dict_file_path)
+  );
+
+  // build dictionary on a background thread
   thread::spawn(move || {
-    let _ = &DICT.lock().unwrap();
+    let dict = Mutex::new(
+      Dict::build(&dict_file_path)
+        .expect("Error: Failed to load a dictionary")
+    );
+    DICT.set(dict).unwrap();
   });
 }
 

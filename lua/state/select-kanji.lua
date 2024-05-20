@@ -8,18 +8,32 @@ local g_common = require 'common'
 local g_ffi = require 'ffi'
 
 g_ffi.cdef[[
-  void init();
+  void init(char* dict_file_path);
   void look_up(char** chars, char ac_kana, const size_t num_chars);
   void get_results(char** results, const size_t buf_size, const size_t offset, size_t* num_results);
 ]]
 
-local this_file_dir = debug.getinfo(1, 'S').source:match("@?(.*/)")
-local g_dict = g_ffi.load(this_file_dir .. "../../rust/target/debug/libminskk.dylib")
+local file_dir = debug.getinfo(1, 'S').source:match("@?(.*/)")
+
+local lib_ext
+if g_ffi.os == 'OSX' then
+  lib_ext = 'dylib'
+elseif g_ffi.os == 'Linux' or g_ffi.os == 'POSIX' then
+  lib_ext = 'so'
+else
+  error(g_ffi.os .. ' is not supported')
+end
+
+local g_dict = g_ffi.load(file_dir .. '../../rust/target/debug/libminskk.' .. lib_ext)
 
 function M.init(dfa, util)
   M.dfa = dfa
   M.util = util
-  g_dict.init();
+
+  local dict_file_path = os.getenv('HOME') .. '/.skk/SKK-JISYO.L'
+  local ffi_dict_file_path = g_ffi.new('char[?]', #dict_file_path + 1)
+  g_ffi.copy(ffi_dict_file_path, dict_file_path, #dict_file_path)
+  g_dict.init(ffi_dict_file_path);
 end
 
 local function look_up(reading, ac_kana_letter, ac_kana_first_char)
