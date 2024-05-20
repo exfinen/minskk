@@ -20,13 +20,14 @@ This plugin is written fully from scratch using `Rust` for the dictionary relate
 - neovim quietly dies upon rust panic
 
 ## TO BE IMPLEMENTED
+- Allowing to use and load a dictionary at the same time
 - Full-width (zenkaku) Symbol entry
 - Local Dictionary
 - Word Completion
 - Annotation
 - Candidate Selection Dialog
 - C-g
-- Plugin manager support (at least vimplug)
+- Plugin manager support (vimplug at least)
 
 ## Requirements
 - macOS or Linux
