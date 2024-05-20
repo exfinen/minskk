@@ -132,4 +132,3 @@ pub extern "C" fn get_results(
   unsafe { *num_results = i };
 }
 
-

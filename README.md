@@ -6,7 +6,7 @@ Minimalist Neovim plugin SKK implementation aiming to be functional on [DM250](h
 
 Being minimalist, the plugin is mostly non-configurable and works out of the box with a sticky-shift setting.
 
-This plugin is written fully from scratch using `Rust` for the dictionary related part and `Lua` for the rest, and should work on an environment where `Rust` is available run including `Debian 11` on DM250.
+This plugin is written fully from scratch using `Rust` for the dictionary related part and `Lua` for the rest, and works on an environment where `Rust` is available including `Debian 11` on DM250.
 
 ## Implemented
 - Hiragana entry
@@ -50,3 +50,5 @@ $ cargo build
    set statusline+=%{v:lua.minskk_statusline()}
    ```
 
+## Note on Using the Plugin on DM250
+- It takes a relatively long time to load `SKK-JISHO.L`. However, the plugin works without problems in terms of speed. You may want to consider using a smaller dictionary if the dictionary loading time is an issue.
