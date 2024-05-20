@@ -63,7 +63,7 @@ local function handle_sticky_shift()
       return '*'
     end
   else
-    error('should not be visited. check code (input-reading.lua 1)')
+    error('should not be visited. check code (input-reading 1)')
   end
 end
 
@@ -79,11 +79,20 @@ end
 
 function M.handle_bs()
   if #M.reading > 0 then
-    -- delete the last char
-    table.remove(M.reading, #M.reading)
-    vim.api.nvim_feedkeys(M.util.bs, "in", true)
+    if M.curr_input_mode == InputMode.Reading then
+      -- delete the last char
+      table.remove(M.reading, #M.reading)
+      vim.api.nvim_feedkeys(M.util.bs, "in", true)
+
+    elseif M.curr_input_mode == InputMode.AcKana then
+      -- delete '*' and go back to reading mode
+      g_common.delete_n_chars_before_cursor(1, 0)
+      M.curr_input_mode = InputMode.Reading
+    else
+      error('should not be visited. check code (input-reading 2)')
+    end
   else
-    -- go back to direct input kana state if there is no char to delete
+    -- go back to direct input kana if there is no char to delete
     remove_inverted_triangle(0)
     M.dfa.go_to_direct_input_kana_state()
   end
@@ -213,7 +222,7 @@ function M.handle_input(c)
     return handle_input_ac_kana(c)
 
   else
-    error('should not be visited. check code (input-reading.lua 2)')
+    error('should not be visited. check code (input-reading 3)')
   end
 end
 
