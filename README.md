@@ -52,4 +52,4 @@ $ cargo build
    ```
 
 ## Note on Using the Plugin on DM250
-- It takes a relatively long time to load `SKK-JISHO.L`. Although the plugin works fine in terms of speed once the dictionary is loaded, you may want to consider using a smaller dictionary if the dictionary loading time is an issue.
+- It takes a relatively long time to load `SKK-JISHO.L` on DM250. Although the plugin works fine in terms of speed once the dictionary is loaded, you may want to consider using a smaller dictionary if the dictionary loading time is an issue.
