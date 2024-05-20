@@ -17,20 +17,44 @@ static RESULT_CACHE: Lazy<Mutex<Vec<String>>> =
   Lazy::new(|| Mutex::new(vec![]));
 
 #[no_mangle]
+pub extern "C" fn build(
+  dict_file_path: *const c_char,
+) {
+  let dict_file_path = unsafe {
+    CStr::from_ptr(dict_file_path).to_str().unwrap()
+  }.to_string();
+  
+  match PathBuf::from_str(&dict_file_path) {
+    Ok(dict_file_path) => {
+      // build dictionary on a background thread
+      thread::spawn(move || {
+        match Dict::build(&dict_file_path) {
+          Ok(dict) => {
+            DICT.set(Mutex::<Dict>::new(dict)).unwrap();
+          },
+          Err(e) => println!("Failed to build dictionary w/ {:?}: {:?}", dict_file_path, e),
+        }
+      });
+    },
+    Err(e) => {
+      eprintln!("Malformed path {:?}: {:?}", dict_file_path, e);
+    },
+  }
+}
+
+#[no_mangle]
 pub extern "C" fn look_up(
   chars: *mut *mut c_char,
   ac_kana: c_char,
-  num_chars: size_t
+  num_chars: size_t,
 ) {
   let strings_slice = unsafe {
-    assert!(!chars.is_null(), "chars argument is null");
     std::slice::from_raw_parts(chars, num_chars)
   };
 
   let mut reading = vec![];
   for &c_str_ptr in strings_slice.iter() {
     let c_str = unsafe {
-      assert!(!c_str_ptr.is_null(), "string pointer is null");
       std::ffi::CStr::from_ptr(c_str_ptr)
     };
     match c_str.to_str() {
@@ -44,42 +68,25 @@ pub extern "C" fn look_up(
   }
   RESULT_CACHE.lock().unwrap().clear();
 
-  let dict = &DICT.get().unwrap().lock().unwrap();
-  let ac_kana = {
-    let ac_kana = ac_kana as u8 as char;
-    if ac_kana  == ' ' {
-      None
-    } else {
-      Some(ac_kana)
-    }
+  match &DICT.get() {
+    Some(dict) => {
+      let dict = dict.lock().unwrap();
+      let ac_kana = {
+        let ac_kana = ac_kana as u8 as char;
+        if ac_kana  == ' ' {
+          None
+        } else {
+          Some(ac_kana)
+        }
+      };
+      if let Some(res) = dict.look_up(&reading, &ac_kana) {
+        for s in res {
+          RESULT_CACHE.lock().unwrap().push(s.to_string());
+        }
+      }
+    },
+    None => (),
   };
-  if let Some(res) = dict.look_up(&reading, &ac_kana) {
-    for s in res {
-      RESULT_CACHE.lock().unwrap().push(s.to_string());
-    }
-  }
-}
-
-#[no_mangle]
-pub extern "C" fn init(
-  dict_file_path: *const c_char,
-) {
-  let dict_file_path = unsafe {
-    CStr::from_ptr(dict_file_path).to_str().unwrap()
-  }.to_string();
-  
-  let dict_file_path = PathBuf::from_str(&dict_file_path).expect(
-    &format!("Malformed path: {:?}", dict_file_path)
-  );
-
-  // build dictionary on a background thread
-  thread::spawn(move || {
-    let dict = Mutex::new(
-      Dict::build(&dict_file_path)
-        .expect("Error: Failed to load a dictionary")
-    );
-    DICT.set(dict).unwrap();
-  });
 }
 
 #[no_mangle]

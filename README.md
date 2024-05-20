@@ -29,7 +29,7 @@ This plugin is written fully from scratch using `Rust` for the dictionary relate
 - Plugin manager support (at least vimplug)
 
 ## Requirements
-- macOS (Linux will be supported)
+- macOS or Linux
 - [rustup](https://rustup.rs/)
 - [SKK-JISHO.L](http://openlab.jp/skk/dic/SKK-JISYO.L.gz) under `~/.skk`
 
