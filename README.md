@@ -45,7 +45,7 @@ $ cargo build
 ```
 
 ## Configuration
-1. `minskk_statusline` is exposed to provide the current state of the plugin. e.g. the following adds the minskk state to the status line.
+1. `minskk_statusline` is exposed to provide the current state of the plugin outside. e.g. the following adds the minskk state to the status line.
 
    ```vim
    set statusline+=%{v:lua.minskk_statusline()}
