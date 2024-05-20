@@ -1,33 +1,31 @@
 # minskk
 
+**Status:** **Work in Progress**
+
 Minimalist Neovim plugin SKK implementation aiming to be functional on [DM250](https://www.kingjim.co.jp/pomera/dm250/).
 
 Being minimalist, the plugin is mostly not configurable and works out of the box with a sticky-shift setting.
 
-**Status:** **Work in Progress**
+This plugin is written fully from scratch using mostly in `Lua` and in `Rust` for the dictionary related part, and should work on an environment where `Rust` is available run including `Debian 11` on DM250.
 
-Due to the architecture of [DM250](https://www.kingjim.co.jp/pomera/dm250/) (`armv7`) where `v8` cannot be easily built, existing SKK plugins based on `Deno` that depends on `v8` don't work on [DM250](https://www.kingjim.co.jp/pomera/dm250/).
-
-This plugin is written fully from scratch using `Lua` and `Rust` and works on an environment where `Rust` and `Neovim` can run including `Debian 11` on [DM250](https://www.kingjim.co.jp/pomera/dm250/).
-
-## Currently Supported
-- Hiragana
-- Katakana
-- Half-width (hankaku) Alphanumeric Characters
-- Full-width (zenkaku) Alphabets
-- Kanji Conversion (with many issues)
+## Implemented
+- Hiragana entry
+- Katakana entry
+- Half-width (hankaku) Alphanumeric Character entry
+- Full-width (zenkaku) Alphabet entry
+- Kanji Conversion (with remaining issues)
 
 ## Known Issues
 - Lines disappear and cannot undo
-- Many UI edge cases still not addressed
 
-## TO BE SUPPORTED
-- Full-width (zenkaku) Symbols
+## TO BE IMPLEMENTED
+- Full-width (zenkaku) Symbol entry
 - Local Dictionary
 - Word Completion
 - Annotation
 - Candidate Selection Dialog
 - C-g
+- Plugin manager support (at least vimplug)
 
 ## Requirements
 - macOS (Linux will be supported)
@@ -35,7 +33,7 @@ This plugin is written fully from scratch using `Lua` and `Rust` and works on an
 - [SKK-JISHO.L](http://openlab.jp/skk/dic/SKK-JISYO.L.gz) under `~/.skk`
 
 ## Installation
-Currently only manual installation is avaialble.
+Currently this plugin has be installed manually as follows.
 
 ```bash
 $ cd ~/.config/nvim/pack/plugins/start
