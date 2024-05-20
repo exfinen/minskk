@@ -6,7 +6,7 @@ Minimalist Neovim plugin SKK implementation aiming to be functional on [DM250](h
 
 Being minimalist, the plugin is mostly non-configurable and works out of the box with a sticky-shift setting.
 
-This plugin is written fully from scratch using mostly in `Lua` and in `Rust` for the dictionary related part, and should work on an environment where `Rust` is available run including `Debian 11` on DM250.
+This plugin is written fully from scratch using `Rust` for the dictionary related part and `Lua` for the rest, and should work on an environment where `Rust` is available run including `Debian 11` on DM250.
 
 ## Implemented
 - Hiragana entry
