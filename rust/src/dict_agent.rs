@@ -2,9 +2,12 @@ use crate::dict::Dict;
 
 use libc::{c_char, size_t};
 use once_cell::sync::Lazy;
-use std::sync::Mutex;
-use std::slice;
-use std::ptr;
+use std::{
+  ptr,
+  slice,
+  sync::Mutex,
+  thread,
+};
 
 static DICT: Lazy<Mutex<Dict>> = Lazy::new(|| {
   let home = dirs::home_dir()
@@ -64,7 +67,7 @@ pub extern "C" fn look_up(
 #[no_mangle]
 pub extern "C" fn init() {
   // invoke dictionary building
-  std::thread::spawn(move || {
+  thread::spawn(move || {
     let _ = &DICT.lock().unwrap();
   });
 }

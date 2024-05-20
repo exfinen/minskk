@@ -78,10 +78,6 @@ local function set_dfa_state(state)
   end
 end
 
-function _G.minskk_statusline()
-  return M.status
-end
-
 function M.init()
   vim.api.nvim_set_keymap("n", "<C-j>", "<ESC>:MinSKKEnable<CR>", { silent = true })
 
@@ -129,6 +125,14 @@ function M.init()
   direct_input_kana_state.init(dfa, util)
   input_reading_state.init(dfa, util)
   select_kanji_state.init(dfa, util)
+end
+
+function _G.minskk_statusline()
+  if M.is_enabled then
+    return M.status
+  else
+    return '-'
+  end
 end
 
 vim.cmd [[

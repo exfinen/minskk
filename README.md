@@ -2,7 +2,7 @@
 
 Minimalist Neovim plugin SKK implementation aiming to be functional on [DM250](https://www.kingjim.co.jp/pomera/dm250/).
 
-Being minimalist, the plugin is mostly not configurable and works out of the box with a sticky shift setting.
+Being minimalist, the plugin is mostly not configurable and works out of the box with a sticky-shift setting.
 
 **Status:** **Work in Progress**
 
@@ -22,12 +22,12 @@ This plugin is written fully from scratch using `Lua` and `Rust` and works on an
 - Many UI edge cases still not addressed
 
 ## TO BE SUPPORTED
-- Back Space in Input Reading State
 - Full-width (zenkaku) Symbols
 - Local Dictionary
 - Word Completion
 - Annotation
 - Candidate Selection Dialog
+- C-g
 
 ## Requirements
 - macOS (Linux will be supported)

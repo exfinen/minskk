@@ -80,7 +80,7 @@ end
 function M.handle_bs()
   if #M.reading > 0 then
     -- delete the last char
-    table.remove(M.reading, 1)
+    table.remove(M.reading, #M.reading)
     vim.api.nvim_feedkeys(M.util.bs, "in", true)
   else
     -- go back to direct input kana state if there is no char to delete
