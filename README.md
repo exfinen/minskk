@@ -33,7 +33,7 @@ This plugin is written fully from scratch using `Rust` for the dictionary relate
 - [SKK-JISHO.L](http://openlab.jp/skk/dic/SKK-JISYO.L.gz) under `~/.skk`
 
 ## Installation
-Currently this plugin has be installed manually as follows.
+Currently this plugin has to be installed manually as follows.
 
 ```bash
 $ cd ~/.config/nvim/pack/plugins/start
