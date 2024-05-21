@@ -5,7 +5,6 @@ local M = {
 }
 
 local g_kana_tree = require 'state/kana-tree/logic'
-local g_kana_tree_common = require 'state/kana-tree/common'
 local g_katakana_conv = require 'state/conv-map/katakana'
 local g_common = require 'common'
 
@@ -99,8 +98,8 @@ function M.handle_bs()
 end
 
 function M.handle_esc()
-  -- clear the reverse triangle and reading
-  local x = #'▽' + get_reading_len()
+  -- clear the reverse triangle, reading and incomplete spelling
+  local x = #'▽' + get_reading_len() + g_kana_tree.curr_depth
   g_common.delete_n_chars_before_cursor(x, 0)
   M.reading = {}
 
@@ -124,9 +123,12 @@ local function handle_input_reading_mode(c)
       katakana = katakana .. g_katakana_conv.map(kc)
     end
 
-    -- replace hiragana w/ corresponding katakana
+    -- remove hiragana and incomplete spelling
+    -- and write hiragana in katakana
     g_common.delete_n_chars_before_cursor(
-      #'▽' + get_reading_len(), 0, katakana
+      #'▽' + get_reading_len() + g_kana_tree.curr_depth,
+      0,
+      katakana
     )
 
     M.dfa.go_to_direct_input_kana_state()
@@ -166,7 +168,7 @@ local function handle_input_reading_mode(c)
       ac_kana_first_char = ' ',  -- ' ' means None
     })
   else
-    local res = g_kana_tree_common.traverse(g_kana_tree, M.handle_input, c)
+    local res = g_kana_tree.traverse(g_kana_tree, M.handle_input, c)
     local value = res["value"]
     local is_letter = res["is_letter"]
 
@@ -182,7 +184,7 @@ local function handle_input_ac_kana(c)
     M.ac_kana_first_char = c
   end
 
-  local res = g_kana_tree_common.traverse(g_kana_tree, M.handle_input, c, true)
+  local res = g_kana_tree.traverse(g_kana_tree, M.handle_input, c, true)
   local value = res["value"]
   local is_letter = res["is_letter"]
   local depth = res["depth"]

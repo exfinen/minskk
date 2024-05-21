@@ -3,7 +3,6 @@
 local M = {}
 
 local g_kana_tree = require 'state/kana-tree/logic'
-local g_kana_tree_common = require 'state/kana-tree/common'
 
 function M.init(dfa, util)
   g_kana_tree.init()
@@ -55,7 +54,7 @@ function M.handle_input(c)
     return '▽'
 
   else
-    local res = g_kana_tree_common.traverse(g_kana_tree, M.handle_input, c)
+    local res = g_kana_tree.traverse(g_kana_tree, M.handle_input, c)
     return res["value"]
   end
 end
