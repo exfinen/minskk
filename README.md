@@ -13,12 +13,12 @@ This plugin is written using `Rust` for the dictionary related part and `Lua` fo
 - Katakana entry
 - Half-width (hankaku) Alphanumeric Character entry
 - Full-width (zenkaku) Alphabet entry
-- Kanji Conversion (with remaining issues)
+- Kanji Conversion
 
-## Known Issues
+## Known issues
 - Lines disappear and cannot undo
 
-## TO BE IMPLEMENTED
+## TO DO
 - Allowing to use and load a dictionary at the same time
 - Full-width (zenkaku) Symbol entry
 - Local Dictionary
@@ -61,5 +61,5 @@ Also the plugin expects [SKK-JISHO.L](http://openlab.jp/skk/dic/SKK-JISYO.L.gz) 
    EOF
    ```
 
-## Note on Using the Plugin on DM250
-- It takes a relatively long time to load `SKK-JISHO.L` on DM250. Although the plugin works fine in terms of speed once the dictionary is loaded, you may want to consider using a smaller dictionary if the dictionary loading time is an issue.
+## Note on using the plugin on DM250
+- It takes a relatively long time to load `SKK-JISHO.L` on DM250. Although the plugin works fine in terms of speed once the dictionary is loaded, using `SKK-JISHO.S` is recommended.
