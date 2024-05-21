@@ -66,13 +66,26 @@ local function handle_sticky_shift()
   end
 end
 
+local function delete_ac_kana_part()
+  local x = #'*' + g_kana_tree.curr_depth
+  g_common.delete_n_chars_before_cursor(x, 0)
+end
+
 function M.handle_ctrl_j()
   remove_inverted_triangle(get_reading_len())
   M.dfa.go_to_direct_input_kana_state()
 end
 
 function M.handle_cr()
-  remove_inverted_triangle(get_reading_len())
+  if M.curr_input_mode == InputMode.AcKana then
+    g_common.delete_n_chars_before_cursor(
+      #'▽' + get_reading_len() + #'*' + g_kana_tree.curr_depth,
+      0,
+      g_common.join_str_array(M.reading)
+    )
+  else
+    remove_inverted_triangle(get_reading_len())
+  end
   M.dfa.go_to_direct_input_kana_state()
 end
 
@@ -98,12 +111,20 @@ function M.handle_bs()
 end
 
 function M.handle_esc()
-  -- clear the reverse triangle, reading and incomplete spelling
-  local x = #'▽' + get_reading_len() + g_kana_tree.curr_depth
-  g_common.delete_n_chars_before_cursor(x, 0)
-  M.reading = {}
+  if M.curr_input_mode == InputMode.Reading then
+    -- clear the reverse triangle, reading and incomplete spelling
+    local x = #'▽' + get_reading_len() + g_kana_tree.curr_depth
+    g_common.delete_n_chars_before_cursor(x, 0)
+    M.reading = {}
 
-  M.dfa.go_to_direct_input_kana_state()
+    M.dfa.go_to_direct_input_kana_state()
+
+  elseif M.curr_input_mode == InputMode.AcKana then
+    -- go back to input reading mode
+    M.curr_input_mode = InputMode.Reading
+    delete_ac_kana_part()
+    g_kana_tree.go_to_root()
+  end
 end
 
 local function handle_input_reading_mode(c)
@@ -206,7 +227,6 @@ local function handle_input_ac_kana(c)
       g_common.delete_n_chars_before_cursor(all_len, 0, replacement, ak)
     else
       -- otherwise, start entering ac_kana again
-      g_kana_tree.go_to_root()
       g_common.delete_n_chars_before_cursor(depth - 1, 0)
     end
     return ''
