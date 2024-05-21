@@ -19,17 +19,6 @@ function M.init(dfa, util)
   M.util = util
 end
 
-function M.enter(inst)
-  inst = inst or {}
-  g_kana_tree.go_to_root()
-  g_kana_tree.set_hiragana()
-
-  M.curr_input_mode = InputMode.Reading
-  M.reading = inst.reading or {}
-
-  M.util.set_dfa_state(M.util.DFAState.InputReading_Reading)
-end
-
 function M.go_to_ac_kana_mode()
   M.curr_input_mode = InputMode.AcKana
 end
@@ -246,6 +235,22 @@ function M.handle_input(c)
   else
     error('should not be visited. check code (input-reading 3)')
   end
+end
+
+function M.enter(inst)
+  inst = inst or {}
+  if inst.ac_kana_letter and #inst.ac_kana_letter ~= 0 then
+    -- there was no candidate and came back from select kanji state
+    M.curr_input_mode = InputMode.AcKana
+    M.ac_kana_first_char = nil
+  else
+    g_kana_tree.go_to_root()
+    g_kana_tree.set_hiragana()
+
+    M.curr_input_mode = InputMode.Reading
+    M.reading = inst.reading or {}
+  end
+  M.util.set_dfa_state(M.util.DFAState.InputReading_Reading)
 end
 
 return M
