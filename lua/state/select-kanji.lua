@@ -24,7 +24,7 @@ else
   error(g_ffi.os .. ' is not supported')
 end
 
-local g_dict = g_ffi.load(file_dir .. '../../rust/target/debug/libminskk.' .. lib_ext)
+local g_dict = g_ffi.load(file_dir .. '../../rust/target/release/libminskk.' .. lib_ext)
 
 function M.build_dict(dict_file_path)
   local ffi_dict_file_path = g_ffi.new('char[?]', #dict_file_path + 1)
