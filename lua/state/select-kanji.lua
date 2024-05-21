@@ -8,7 +8,7 @@ local g_common = require 'common'
 local g_ffi = require 'ffi'
 
 g_ffi.cdef[[
-  void build(const char* dict_file_path);
+  int build(const char* dict_file_path);
   void look_up(char** chars, char ac_kana, const size_t num_chars);
   void get_results(char** results, const size_t buf_size, const size_t offset, size_t* num_results);
 ]]
@@ -26,19 +26,29 @@ end
 
 local g_dict = g_ffi.load(file_dir .. '../../rust/target/debug/libminskk.' .. lib_ext)
 
+function M.build_dict(dict_file_path)
+  local ffi_dict_file_path = g_ffi.new('char[?]', #dict_file_path + 1)
+  g_ffi.copy(ffi_dict_file_path, dict_file_path, #dict_file_path)
+
+  local res = g_dict.build(ffi_dict_file_path)
+
+  if res ~= 0 then
+    local msg = 'MinSKK: '
+
+    if res == 1 then
+      msg = msg .. dict_file_path .. ' not found'
+    elseif res == 2 then
+      msg = msg .. dict_file_path .. ' is malformed'
+    else
+      error('should not be visited. check code (select-kanji 1)')
+    end
+    M.util.status.show_alert(msg, 5000)
+  end
+end
+
 function M.init(dfa, util)
   M.dfa = dfa
   M.util = util
-
-  local dict_file_path = os.getenv('HOME') .. '/.skk/SKK-JISYO.L'
-  if g_common.file_exists(dict_file_path) then
-    local ffi_dict_file_path = g_ffi.new('char[?]', #dict_file_path + 1)
-    g_ffi.copy(ffi_dict_file_path, dict_file_path, #dict_file_path)
-
-    g_dict.build(ffi_dict_file_path)
-  else
-    g_common.alert('MinSKK: ' .. dict_file_path .. ' not exist')
-  end
 end
 
 local function look_up(reading, ac_kana_letter, ac_kana_first_char)

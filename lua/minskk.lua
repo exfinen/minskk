@@ -1,7 +1,6 @@
 local M = {
   curr_state = nil,
   is_enabled = false,
-  status = nil,
 }
 
 local DFAState = {
@@ -19,6 +18,8 @@ local direct_input_hwc_state = require 'state/direct-input-hwc'
 local direct_input_fwc_state = require 'state/direct-input-fwc'
 local input_reading_state = require 'state/input-reading'
 local select_kanji_state = require 'state/select-kanji'
+
+local status = require 'status'
 
 local function go_to_direct_input_hwc_state()
   M.curr_state = direct_input_hwc_state
@@ -62,19 +63,28 @@ end
 
 local function set_dfa_state(state)
   if state == DFAState.DirectInput_FWC then
-    M.status = '全角英数'
+    status.set('全角英数')
   elseif state == DFAState.DirectInput_HWC then
-    M.status = '半角英数'
+    status.set('半角英数')
   elseif state == DFAState.DirectInput_Hiragana then
-    M.status = 'ひらがな'
+    status.set('ひらがな')
   elseif state == DFAState.DirectInput_Katakana then
-    M.status = 'カタカナ'
+    status.set('カタカナ')
   elseif state == DFAState.InputReading_Reading then
-    M.status = '漢字読み'
+    status.set('漢字読み')
   elseif state == DFAState.InputReading_AcKana then
-    M.status = '送り仮名'
+    status.set('送り仮名')
   elseif state == DFAState.SelectKanji then
-    M.status = '漢字変換'
+    status.set('漢字変換')
+  end
+end
+
+function M.apply_settings_override(settings)
+  local mo = vim.g.minskk_override
+  if mo then
+    if mo.dict_file_path then
+      settings.dict_file_path = mo.dict_file_path
+    end
   end
 end
 
@@ -119,20 +129,32 @@ function M.init()
     disable = disable,
     set_dfa_state = set_dfa_state,
     DFAState = DFAState,
+    status = status,
   }
   direct_input_hwc_state.init(dfa, util)
   direct_input_fwc_state.init(dfa, util)
   direct_input_kana_state.init(dfa, util)
   input_reading_state.init(dfa, util)
   select_kanji_state.init(dfa, util)
+
+  -- load dictionary
+  local settings = {
+    dict_file_path = '~/.skk/SKK-JISYO.L',
+  }
+  M.apply_settings_override(settings)
+  select_kanji_state.build_dict(settings.dict_file_path)
+end
+
+function _G.minskk_setup(settings)
+  settings = settings or {}
+
+  if settings.dict_file_path then
+    M.dict_file_path = settings.dict_file_path
+  end
 end
 
 function _G.minskk_statusline()
-  if M.is_enabled then
-    return M.status
-  else
-    return '-'
-  end
+  return status.get()
 end
 
 vim.cmd [[

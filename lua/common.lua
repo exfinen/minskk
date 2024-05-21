@@ -1,14 +1,5 @@
 local M = {}
 
-local function _insert_word()
-  local row, col = unpack(vim.api.nvim_win_get_cursor(0))
-  local current_buf = vim.api.nvim_get_current_buf()
-  local text_to_insert = M.get_kanji()
-
-  vim.api.nvim_buf_set_text(current_buf, row - 1, col, row - 1, col, { text_to_insert })
-  vim.api.nvim_win_set_cursor(0, { row, col + #text_to_insert })
-end
-
 -- n           number of chars to delete
 -- offset      number of offset chars before start counting n (optional)
 -- replacement replacement chars for the deleted chars (optional)

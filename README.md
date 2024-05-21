@@ -6,7 +6,7 @@ Minimalist Neovim plugin SKK implementation aiming to be functional on [DM250](h
 
 Being minimalist, the plugin is mostly non-configurable and works out of the box with a sticky-shift setting.
 
-This plugin is written fully from scratch using `Rust` for the dictionary related part and `Lua` for the rest, and works on an environment where `Rust` is available including `Debian 11` on DM250.
+This plugin is written using `Rust` for the dictionary related part and `Lua` for the rest, and works on an environment where `Rust` is available including `Debian 11` on DM250.
 
 ## Implemented
 - Hiragana entry
@@ -17,7 +17,6 @@ This plugin is written fully from scratch using `Rust` for the dictionary relate
 
 ## Known Issues
 - Lines disappear and cannot undo
-- neovim quietly dies upon rust panic
 
 ## TO BE IMPLEMENTED
 - Allowing to use and load a dictionary at the same time
@@ -32,7 +31,6 @@ This plugin is written fully from scratch using `Rust` for the dictionary relate
 ## Requirements
 - macOS or Linux
 - [rustup](https://rustup.rs/)
-- [SKK-JISHO.L](http://openlab.jp/skk/dic/SKK-JISYO.L.gz) under `~/.skk`
 
 ## Installation
 Currently this plugin has to be installed manually as follows.
@@ -44,11 +42,23 @@ $ cd rust
 $ cargo build
 ```
 
+Also the plugin expects [SKK-JISHO.L](http://openlab.jp/skk/dic/SKK-JISYO.L.gz) to exist under `~/.skk`. This can be overridden using `minskk_override` explained below.
+
 ## Configuration
 1. `minskk_statusline` is exposed to provide the current state of the plugin outside. e.g. the following adds the minskk state to the status line.
 
    ```vim
    set statusline+=%{v:lua.minskk_statusline()}
+   ```
+
+2. use `minskk_override` global variable to override the default settings. e.g. 
+
+   ```vim
+   lua << EOF
+     vim.g.minskk_override = {
+       dict_file_path = '~/.skk/SKK-JISYO.S',
+     }
+   EOF
    ```
 
 ## Note on Using the Plugin on DM250

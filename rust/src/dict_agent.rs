@@ -17,27 +17,37 @@ static RESULT_CACHE: Lazy<Mutex<Vec<String>>> =
   Lazy::new(|| Mutex::new(vec![]));
 
 #[no_mangle]
+// return values:
+// 0: Ok
+// 1: File not found
+// 2: Malformed path
 pub extern "C" fn build(
   dict_file_path: *const c_char,
-) {
+) -> u8 {
   let dict_file_path = unsafe {
     CStr::from_ptr(dict_file_path).to_str().unwrap()
   }.to_string();
+
+  let dict_file_path = shellexpand::tilde(&dict_file_path);
   
   match PathBuf::from_str(&dict_file_path) {
     Ok(dict_file_path) => {
-      // build dictionary on a background thread
-      thread::spawn(move || {
-        match Dict::build(&dict_file_path) {
-          Ok(dict) => {
-            DICT.set(Mutex::<Dict>::new(dict)).unwrap();
-          },
-          Err(e) => println!("Failed to build dictionary w/ {:?}: {:?}", dict_file_path, e),
-        }
-      });
+      if dict_file_path.exists() {
+        thread::spawn(move || {
+          match Dict::build(&dict_file_path) {
+            Ok(dict) => {
+              DICT.set(Mutex::<Dict>::new(dict)).unwrap();
+            },
+            Err(e) => println!("Failed to build dictionary w/ {:?}: {:?}", dict_file_path, e),
+          }
+        });
+        0
+      } else {
+        1
+      }
     },
-    Err(e) => {
-      eprintln!("Malformed path {:?}: {:?}", dict_file_path, e);
+    Err(_) => {
+      2
     },
   }
 }
