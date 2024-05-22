@@ -15,14 +15,12 @@ This plugin is written using `Rust` for the dictionary related part and `Lua` fo
 - Full-width (zenkaku) Alphabet entry
 - Kanji Conversion (wip)
 - Gzipped dictionary support
-- De/Serialization w/ gzip of once loaded library
+- De/serialization w/ gzip of once-loaded dictionary
 
 ## Known issues
 - Lines disappear and cannot undo
 
 ## TO DO
-- Loading dictionary directly from gz
-- de/ser loaded dictionary from/to a file
 - Full-width (zenkaku) Symbol entry
 - Local Dictionary
 - Word Completion
