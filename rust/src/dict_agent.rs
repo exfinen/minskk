@@ -7,7 +7,7 @@ use std::{
   ffi::CStr,
   fs::{self, File},
   io::{BufReader, Read},
-  path::PathBuf,
+  path::{Path, PathBuf},
   ptr,
   slice,
   str::FromStr,
@@ -19,6 +19,13 @@ use std::{
 static DICT: OnceCell<Mutex<Dict>> = OnceCell::new();
 static RESULT_CACHE: Lazy<Mutex<Vec<String>>> =
   Lazy::new(|| Mutex::new(vec![]));
+
+pub enum DictFile {
+  Gz(PathBuf, PathBuf),
+  SerGz(PathBuf),
+  Raw(PathBuf, PathBuf),
+  NotFound,
+}
 
 #[repr(C)]
 pub enum BuildResult {
@@ -37,52 +44,76 @@ fn read_lines_and_set_dict<T: Read>(reader: &mut BufReader<T>) {
   }
 }
 
-#[no_mangle]
+fn get_path_ser_gz(
+  dir: &Option<&Path>,
+  file_name: &String,
+) -> PathBuf {
+  match dir {
+    Some(dir) => dir.join(file_name.clone() + ".ser.gz"),
+    None => { PathBuf::from(file_name.clone() + ".ser.gz") },
+  }
+}
+
+fn get_path_gz(
+  dir: &Option<&Path>,
+  file_name: &String,
+) -> PathBuf {
+  match dir {
+    Some(dir) => dir.join(file_name.clone() + ".gz"),
+    None => { PathBuf::from(file_name.clone() + ".gz") },
+  }
+}
+
+fn exists_as_file(path: &PathBuf) -> bool {
+  path.exists() && fs::metadata(&path).unwrap().is_file()
+}
+
+fn drop_gz_suffix_if_exists(s: String) -> String {
+  if s.ends_with(".gz") {
+    let end = s.len() - ".gz".len();
+    s[..end].to_string()
+  } else { s }
+}
+
 // load precedence:
 // 1. ser.gz
 // 2. gz
-// 3. others including no extension
-pub extern "C" fn build_from_file(path: &PathBuf) {
-  let file_name = &path.file_name()
-    .unwrap().to_str().unwrap().to_string();
+// 3. others
+fn get_dict_file_to_load(base_path: &PathBuf) -> DictFile {
+  match &base_path.file_name() {
+    None => DictFile::NotFound,
+    Some(file_name) => {
+      let file_name = drop_gz_suffix_if_exists(
+        file_name.to_str().unwrap().to_string()
+      );
+      let dir = base_path.parent();
 
-  let path_ser_gz = {
-    match path.parent() {
-      Some(dir) => dir.join(file_name.clone() + ".ser.gz"),
-      None => { PathBuf::from(file_name.clone() + ".ser.gz") },
+      // if ser.gz exist, should load it
+      let path_ser_gz = get_path_ser_gz(&dir, &file_name); 
+      if exists_as_file(&path_ser_gz) {
+        DictFile::SerGz(path_ser_gz)
+
+      } else {
+        // otherwise, should load .gz if exists
+        let path_gz = get_path_gz(&dir, &file_name);
+        if exists_as_file(&path_gz) {
+          DictFile::Gz(path_gz, path_ser_gz)
+
+        } else {
+          // if both don't exist, base_path can be a raw file
+          if exists_as_file(base_path) {
+            DictFile::Raw(base_path.clone(), path_ser_gz)
+
+          } else {
+            DictFile::NotFound
+          }
+        }
+      }
     }
-  };
-  if path_ser_gz.exists() {
-    match Dict::deserialize_from_file(&path_ser_gz) {
-      Ok(dict) => {
-        DICT.set(Mutex::<Dict>::new(dict)).unwrap();
-      },  
-      Err(e) => {
-        println!("{:?}", e);
-      },
-    }
-    return;
   }
+}
 
-  let path_gz = {
-    match path.parent() {
-      Some(dir) => dir.join(file_name.clone() + ".gz"),
-      None => { PathBuf::from(file_name.clone() + ".gz") },
-    }
-  };
-  if path_gz.exists() {
-    let file = File::open(&path_gz).unwrap();
-    let file = GzDecoder::new(file);
-    let mut reader = BufReader::new(file);
-    read_lines_and_set_dict(&mut reader);
-
-  } else {
-    let file = File::open(&path).unwrap();
-    let mut reader = BufReader::new(file);
-    read_lines_and_set_dict(&mut reader);
-  }
-
-  // serialize to .ser.gz
+fn gen_ser_gz(path_ser_gz: &PathBuf) {
   match &DICT.get() {
     Some(dict) => {
       let dict = dict.lock().unwrap();
@@ -90,36 +121,68 @@ pub extern "C" fn build_from_file(path: &PathBuf) {
         println!("{:?}", e);
       }
     },
-    None => println!("should not be visited. check code (dict-agent 1)"),
+    None => println!("should not be visited. check code (dict-agent 2)"),
   };
 }
 
 #[no_mangle]
+pub extern "C" fn build_from_file(dict_file: &DictFile) {
+  match dict_file {
+    DictFile::SerGz(path_ser_gz) => {
+      match Dict::deserialize_from_file(&path_ser_gz) {
+        Ok(dict) => {
+          DICT.set(Mutex::<Dict>::new(dict)).unwrap();
+        },  
+        Err(e) => {
+          println!("{:?}", e);
+        },
+      }
+    },
+    DictFile::Gz(path_gz, path_ser_gz) => {
+      let file = File::open(&path_gz).unwrap();
+      let file = GzDecoder::new(file);
+      let mut reader = BufReader::new(file);
+      read_lines_and_set_dict(&mut reader);
+      gen_ser_gz(&path_ser_gz);
+    },
+    DictFile::Raw(path_raw, path_ser_gz) => {
+      let file = File::open(&path_raw).unwrap();
+      let mut reader = BufReader::new(file);
+      read_lines_and_set_dict(&mut reader);
+      gen_ser_gz(&path_ser_gz);
+    },
+    DictFile::NotFound => {
+      println!("should not be visited. check code (dict_agent 1)");
+    }
+  }
+}
+
+#[no_mangle]
 pub extern "C" fn build(
-  dict_file_path: *const c_char,
+  base_dict_file_path: *const c_char,
 ) -> BuildResult {
-  let dict_file_path = unsafe {
-    CStr::from_ptr(dict_file_path).to_str().unwrap()
+  let base_dict_file_path = unsafe {
+    CStr::from_ptr(base_dict_file_path).to_str().unwrap()
   }.to_string();
 
-  let dict_file_path = shellexpand::tilde(&dict_file_path);
+  let base_dict_file_path =
+    shellexpand::tilde(&base_dict_file_path);
   
-  match PathBuf::from_str(&dict_file_path) {
-    Ok(dict_file_path) => {
-      let is_existing_file =
-        dict_file_path.exists()
-        && fs::metadata(&dict_file_path).unwrap().is_file();
-
-      if is_existing_file {
-        thread::spawn(move || {
-          let start = Instant::now();
-          build_from_file(&dict_file_path);
-          let duration = start.elapsed();
-          println!("Loaded dict in {} ms", duration.as_millis()); 
-        });
-        BuildResult::Success
-      } else {
-        BuildResult::FileNotFound
+  match PathBuf::from_str(&base_dict_file_path) {
+    Ok(base_dict_file_path) => {
+      match get_dict_file_to_load(&base_dict_file_path) {
+        DictFile::NotFound => {
+          BuildResult::FileNotFound
+        },
+        dict_file => {
+          thread::spawn(move || {
+            let start = Instant::now();
+            build_from_file(&dict_file);
+            let duration = start.elapsed();
+            println!("Loaded dict in {} ms", duration.as_millis()); 
+          });
+          BuildResult::Success
+        },
       }
     },
     Err(_) => {

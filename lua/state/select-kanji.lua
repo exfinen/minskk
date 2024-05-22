@@ -26,18 +26,24 @@ end
 
 local g_dict = g_ffi.load(file_dir .. '../../rust/target/release/libminskk.' .. lib_ext)
 
+local BuildResult = {
+  Succeeded = 0,
+  FileNotFound = 1,
+  MalformedPath = 2,
+}
+
 function M.build_dict(dict_file_path)
   local ffi_dict_file_path = g_ffi.new('char[?]', #dict_file_path + 1)
   g_ffi.copy(ffi_dict_file_path, dict_file_path, #dict_file_path)
 
   local res = g_dict.build(ffi_dict_file_path)
 
-  if res ~= 0 then
+  if res ~= BuildResult.Succeeded then
     local msg = 'MinSKK: '
 
-    if res == 1 then
+    if res == BuildResult.FileNotFound then
       msg = msg .. dict_file_path .. ' not found'
-    elseif res == 2 then
+    elseif res == BuildResult.PathMalformed then
       msg = msg .. dict_file_path .. ' is malformed'
     else
       error('should not be visited. check code (select-kanji 1)')
