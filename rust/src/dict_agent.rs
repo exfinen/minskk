@@ -13,6 +13,7 @@ use std::{
   str::FromStr,
   sync::Mutex,
   thread,
+  time::Instant,
 };
 
 static DICT: OnceCell<Mutex<Dict>> = OnceCell::new();
@@ -111,7 +112,10 @@ pub extern "C" fn build(
 
       if is_existing_file {
         thread::spawn(move || {
+          let start = Instant::now();
           build_from_file(&dict_file_path);
+          let duration = start.elapsed();
+          println!("Loaded dict in {} ms", duration.as_millis()); 
         });
         BuildResult::Success
       } else {

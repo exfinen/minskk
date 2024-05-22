@@ -40,7 +40,7 @@ Currently this plugin has to be installed manually as follows.
 $ cd ~/.config/nvim/pack/plugins/start
 $ git clone https://github.com/exfinen/minskk.git
 $ cd rust
-$ cargo build
+$ cargo build --release
 ```
 
 Also the plugin expects [SKK-JISHO.L](http://openlab.jp/skk/dic/SKK-JISYO.L.gz) to exist under `~/.skk`. This can be overridden using `minskk_override` explained below.
