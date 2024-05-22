@@ -14,7 +14,8 @@ This plugin is written using `Rust` for the dictionary related part and `Lua` fo
 - Half-width (hankaku) Alphanumeric Character entry
 - Full-width (zenkaku) Alphabet entry
 - Kanji Conversion (wip)
-- gzipped dictionary support
+- Gzipped dictionary support
+- De/Serialization w/ gzip of once loaded library
 
 ## Known issues
 - Lines disappear and cannot undo

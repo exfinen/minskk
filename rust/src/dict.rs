@@ -1,15 +1,24 @@
+use bincode;
+use encoding_rs::EUC_JP;
+use flate2::{
+  Compression,
+  write::{GzDecoder, GzEncoder},
+};
+use serde::{Serialize, Deserialize};
 use std::{
   collections::HashMap,
-  io::{self, Result},
+  fs::File,
+  io::{BufRead, BufReader, Error, ErrorKind, Read, Result, Write},
+  path::PathBuf,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Node {
   children: HashMap<char,Node>,
   kanjis: HashMap<Option<char>, Vec<String>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Dict {
   root: Node,
 }
@@ -79,11 +88,10 @@ impl Dict {
       Some(res) => {
         if res.readings.len() == 0 || res.kanjis.len() == 0 {
           Err(
-            io::Error::new(
-              io::ErrorKind::NotFound,
+            Error::new(
+              ErrorKind::NotFound,
               format!("Malformed line: '{}'", line)
-            )
-          )
+            ))
         } else {
           let mut node = &mut self.root;
 
@@ -143,13 +151,73 @@ impl Dict {
     node.kanjis.get(acc_kana)
   }
   
-  pub fn build(lines: &Vec<String>) -> io::Result<Dict> {
+  pub fn build(lines: &Vec<String>) -> Result<Dict> {
     let mut dict = Dict::new();
 
     for line in lines {
       dict.add_dict_file_line(line)?;
     }
     Ok(dict)
+  }
+
+  pub fn reader_to_lines<T: Read>(reader: &mut BufReader<T>) -> Vec<String> {
+    let mut lines = vec![];
+
+    while {
+      let mut buf = Vec::<u8>::new();
+      match reader.read_until(0x0a as u8, &mut buf) {
+        Ok(res) => {
+          if res == 0 {
+            false
+          } else {
+            let res = EUC_JP.decode(&buf);
+            let line = res.0.trim_end_matches("\n");
+            lines.push(line.to_owned());
+            true
+          }
+        },
+        Err(e) => {
+          println!("Failed to read: {:?}", e);
+          true
+        }
+      }
+    } {}
+
+    return lines;
+  }
+
+  pub fn serialize_to_file(&self, path: &PathBuf) -> Result<()> {
+    match bincode::serialize(self) {
+      Ok(ser_dict) => {
+        let file = File::create(path)?;
+        let mut enc = GzEncoder::new(file, Compression::best());
+        enc.write_all(&ser_dict)?;
+        enc.finish()?;
+
+        Ok(())
+      },
+      Err(e) => {
+        Err(Error::new(
+          ErrorKind::Other,
+          format!("Failed to serializing dict: {:?}", e)
+        ))
+      },
+    }
+  }
+  
+  pub fn deserialize_from_file(path: &PathBuf) -> Result<Self> {
+    let mut file = File::open(path)?;
+    let mut comp_buf = Vec::new();
+    file.read_to_end(&mut comp_buf)?;
+
+    let mut dec = GzDecoder::new(Vec::new());
+    dec.write_all(&comp_buf)?;
+    let decomp_buf = dec.finish()?;
+    
+    bincode::deserialize(&decomp_buf).map_err(|e| Error::new(
+      ErrorKind::InvalidData,
+      format!("Failed to deserialize dict: {:?}", e)
+    ))
   }
 }
 
@@ -425,8 +493,12 @@ mod tests {
     let home = dirs::home_dir().expect("Failed to get the home dir");
     let dict_file = home.join(".skk").join("SKK-JISYO.L");
 
+    let file = File::open(&dict_file).unwrap();
+    let mut reader = BufReader::new(file);
+    let lines = Dict::reader_to_lines(&mut reader);
+    
     let start = std::time::Instant::now();
-    let dict = Dict::build(&dict_file).unwrap();
+    let dict = Dict::build(&lines).unwrap();
     let duration = start.elapsed();
 
     println!("Took {} ms to load", duration.as_millis());

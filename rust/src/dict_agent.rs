@@ -6,7 +6,7 @@ use once_cell::sync::{Lazy, OnceCell};
 use std::{
   ffi::CStr,
   fs::{self, File},
-  io::{BufRead, BufReader, Read},
+  io::{BufReader, Read},
   path::PathBuf,
   ptr,
   slice,
@@ -14,8 +14,6 @@ use std::{
   sync::Mutex,
   thread,
 };
-
-use encoding_rs::EUC_JP;
 
 static DICT: OnceCell<Mutex<Dict>> = OnceCell::new();
 static RESULT_CACHE: Lazy<Mutex<Vec<String>>> =
@@ -28,29 +26,8 @@ pub enum BuildResult {
   PathMalformed= 2,
 }
 
-fn build_with_reader<T: Read>(reader: &mut BufReader<T>) {
-  let mut lines = vec![];
-
-  while {
-    let mut buf = Vec::<u8>::new();
-    match reader.read_until(0x0a as u8, &mut buf) {
-      Ok(res) => {
-        if res == 0 {
-          false
-        } else {
-          let res = EUC_JP.decode(&buf);
-          let line = res.0.trim_end_matches("\n");
-          lines.push(line.to_owned());
-          true
-        }
-      },
-      Err(e) => {
-        println!("Failed to read: {:?}", e);
-        true
-      }
-    }
-  } {}
-
+fn read_lines_and_set_dict<T: Read>(reader: &mut BufReader<T>) {
+  let lines = Dict::reader_to_lines(reader);
   match Dict::build(&lines) {
     Ok(dict) => DICT.set(Mutex::<Dict>::new(dict)).unwrap(),
     Err(e) => {
@@ -75,7 +52,14 @@ pub extern "C" fn build_from_file(path: &PathBuf) {
     }
   };
   if path_ser_gz.exists() {
-    println!("Loading sergz...");
+    match Dict::deserialize_from_file(&path_ser_gz) {
+      Ok(dict) => {
+        DICT.set(Mutex::<Dict>::new(dict)).unwrap();
+      },  
+      Err(e) => {
+        println!("{:?}", e);
+      },
+    }
     return;
   }
 
@@ -89,13 +73,24 @@ pub extern "C" fn build_from_file(path: &PathBuf) {
     let file = File::open(&path_gz).unwrap();
     let file = GzDecoder::new(file);
     let mut reader = BufReader::new(file);
-    build_with_reader(&mut reader);
-    return;
+    read_lines_and_set_dict(&mut reader);
+
+  } else {
+    let file = File::open(&path).unwrap();
+    let mut reader = BufReader::new(file);
+    read_lines_and_set_dict(&mut reader);
   }
 
-  let file = File::open(&path).unwrap();
-  let mut reader = BufReader::new(file);
-  build_with_reader(&mut reader);
+  // serialize to .ser.gz
+  match &DICT.get() {
+    Some(dict) => {
+      let dict = dict.lock().unwrap();
+      if let Err(e) = dict.serialize_to_file(&path_ser_gz) {
+        println!("{:?}", e);
+      }
+    },
+    None => println!("should not be visited. check code (dict-agent 1)"),
+  };
 }
 
 #[no_mangle]
