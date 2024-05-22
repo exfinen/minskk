@@ -1,9 +1,12 @@
 use crate::dict::Dict;
 
+use flate2::read::GzDecoder;
 use libc::{c_char, size_t};
 use once_cell::sync::{Lazy, OnceCell};
 use std::{
   ffi::CStr,
+  fs::{self, File},
+  io::{BufRead, BufReader, Read},
   path::PathBuf,
   ptr,
   slice,
@@ -12,18 +15,93 @@ use std::{
   thread,
 };
 
+use encoding_rs::EUC_JP;
+
 static DICT: OnceCell<Mutex<Dict>> = OnceCell::new();
 static RESULT_CACHE: Lazy<Mutex<Vec<String>>> =
   Lazy::new(|| Mutex::new(vec![]));
 
+#[repr(C)]
+pub enum BuildResult {
+  Success = 0,
+  FileNotFound = 1,
+  PathMalformed= 2,
+}
+
+fn build_with_reader<T: Read>(reader: &mut BufReader<T>) {
+  let mut lines = vec![];
+
+  while {
+    let mut buf = Vec::<u8>::new();
+    match reader.read_until(0x0a as u8, &mut buf) {
+      Ok(res) => {
+        if res == 0 {
+          false
+        } else {
+          let res = EUC_JP.decode(&buf);
+          let line = res.0.trim_end_matches("\n");
+          lines.push(line.to_owned());
+          true
+        }
+      },
+      Err(e) => {
+        println!("Failed to read: {:?}", e);
+        true
+      }
+    }
+  } {}
+
+  match Dict::build(&lines) {
+    Ok(dict) => DICT.set(Mutex::<Dict>::new(dict)).unwrap(),
+    Err(e) => {
+      println!("Failed to build dictionary: {:?}", e);
+    },
+  }
+}
+
 #[no_mangle]
-// return values:
-// 0: Ok
-// 1: File not found
-// 2: Malformed path
+// load precedence:
+// 1. ser.gz
+// 2. gz
+// 3. others including no extension
+pub extern "C" fn build_from_file(path: &PathBuf) {
+  let file_name = &path.file_name()
+    .unwrap().to_str().unwrap().to_string();
+
+  let path_ser_gz = {
+    match path.parent() {
+      Some(dir) => dir.join(file_name.clone() + ".ser.gz"),
+      None => { PathBuf::from(file_name.clone() + ".ser.gz") },
+    }
+  };
+  if path_ser_gz.exists() {
+    println!("Loading sergz...");
+    return;
+  }
+
+  let path_gz = {
+    match path.parent() {
+      Some(dir) => dir.join(file_name.clone() + ".gz"),
+      None => { PathBuf::from(file_name.clone() + ".gz") },
+    }
+  };
+  if path_gz.exists() {
+    let file = File::open(&path_gz).unwrap();
+    let file = GzDecoder::new(file);
+    let mut reader = BufReader::new(file);
+    build_with_reader(&mut reader);
+    return;
+  }
+
+  let file = File::open(&path).unwrap();
+  let mut reader = BufReader::new(file);
+  build_with_reader(&mut reader);
+}
+
+#[no_mangle]
 pub extern "C" fn build(
   dict_file_path: *const c_char,
-) -> u8 {
+) -> BuildResult {
   let dict_file_path = unsafe {
     CStr::from_ptr(dict_file_path).to_str().unwrap()
   }.to_string();
@@ -32,22 +110,21 @@ pub extern "C" fn build(
   
   match PathBuf::from_str(&dict_file_path) {
     Ok(dict_file_path) => {
-      if dict_file_path.exists() {
+      let is_existing_file =
+        dict_file_path.exists()
+        && fs::metadata(&dict_file_path).unwrap().is_file();
+
+      if is_existing_file {
         thread::spawn(move || {
-          match Dict::build(&dict_file_path) {
-            Ok(dict) => {
-              DICT.set(Mutex::<Dict>::new(dict)).unwrap();
-            },
-            Err(e) => println!("Failed to build dictionary w/ {:?}: {:?}", dict_file_path, e),
-          }
+          build_from_file(&dict_file_path);
         });
-        0
+        BuildResult::Success
       } else {
-        1
+        BuildResult::FileNotFound
       }
     },
     Err(_) => {
-      2
+      BuildResult::PathMalformed
     },
   }
 }

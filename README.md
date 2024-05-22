@@ -13,13 +13,15 @@ This plugin is written using `Rust` for the dictionary related part and `Lua` fo
 - Katakana entry
 - Half-width (hankaku) Alphanumeric Character entry
 - Full-width (zenkaku) Alphabet entry
-- Kanji Conversion
+- Kanji Conversion (wip)
+- gzipped dictionary support
 
 ## Known issues
 - Lines disappear and cannot undo
 
 ## TO DO
-- Allowing to use and load a dictionary at the same time
+- Loading dictionary directly from gz
+- de/ser loaded dictionary from/to a file
 - Full-width (zenkaku) Symbol entry
 - Local Dictionary
 - Word Completion

@@ -1,11 +1,7 @@
 use std::{
   collections::HashMap,
-  fs::File,
-  io::{self, BufRead, Result},
-  path::PathBuf,
+  io::{self, Result},
 };
-
-use encoding_rs::EUC_JP;
 
 #[derive(Debug)]
 pub struct Node {
@@ -48,7 +44,7 @@ impl Dict {
 
     let toks: Vec<&str> = line.splitn(2, ' ').collect();
     if toks.len() != 2 {
-      println!("X {}: {line}", toks.len());
+      println!("Unexpected dict line: {line}");
       return None;
     }
     
@@ -147,29 +143,12 @@ impl Dict {
     node.kanjis.get(acc_kana)
   }
   
-  pub fn build(path: &PathBuf) -> io::Result<Dict> {
-    if !path.exists() {
-      return Err(io::Error::new(
-          io::ErrorKind::NotFound,
-          format!("{:?} does not exist", path)
-      ));
-    }
-    let file = File::open(&path)?;
-    let mut reader = io::BufReader::new(file);
+  pub fn build(lines: &Vec<String>) -> io::Result<Dict> {
     let mut dict = Dict::new();
 
-    while {
-      let mut buf = Vec::<u8>::new();
-      if reader.read_until(0x0a as u8, &mut buf)? == 0 {
-        false
-      } else {
-        let res = EUC_JP.decode(&buf);
-        let line = res.0.trim_end_matches("\n");
-        dict.add_dict_file_line(line)?;
-        true
-      }
-    } {}
-
+    for line in lines {
+      dict.add_dict_file_line(line)?;
+    }
     Ok(dict)
   }
 }
