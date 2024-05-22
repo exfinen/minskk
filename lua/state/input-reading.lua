@@ -73,7 +73,10 @@ function M.handle_cr()
       g_common.join_str_array(M.reading)
     )
   else
-    remove_inverted_triangle(get_reading_len())
+    g_common.delete_n_chars_before_cursor(
+      #'▽' + get_reading_len() + g_kana_tree.curr_depth,
+      0
+    )
   end
   M.dfa.go_to_direct_input_kana_state()
 end
