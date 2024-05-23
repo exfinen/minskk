@@ -66,7 +66,7 @@ Also the plugin expects [SKK-JISHO.L](http://openlab.jp/skk/dic/SKK-JISYO.L.gz) 
 This plugin serializes and gzips a dictionary the first time it is loaded. 
 From the second time onward, the plugin loads the dictionary from the serialized file.
 
-Below is a measurement of loading dicitonaries for each dictionary type and file category.
+Below is a measurement of dicitonary load time for each dictionary type and file category.
 
 |                        | SKK-JISYO.S | SKK-JISHO.M | SKK-JISYO.L |
 | ---------------------- | ----------- | ----------- | ----------- |
