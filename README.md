@@ -62,5 +62,15 @@ Also the plugin expects [SKK-JISHO.L](http://openlab.jp/skk/dic/SKK-JISYO.L.gz) 
    EOF
    ```
 
-## Note on using the plugin on DM250
-- It takes a relatively long time to load `SKK-JISHO.L` on DM250. Although the plugin works fine in terms of speed once the dictionary is loaded, using `SKK-JISHO.S` is recommended.
+## Note on DM250
+This plugin serializes and gzips a dictionary the first time it is loaded. 
+From the second time onward, the plugin loads the dictionary from the serialized file.
+
+Below is a measurement of loading dicitonaries for each dictionary type and file category.
+
+|                        | SKK-JISYO.S | SKK-JISHO.M | SKK-JISYO.L |
+| ---------------------- | ----------- | ----------- | ----------- |
+| Not compressed         |      201 ms |      503 ms |   12,102 ms |
+| Gzipped                |      186 ms |      484 ms |   11,152 ms |
+| Serialize-and-gzipped  |       39 ms |       97 ms |    2,304 ms |
+
