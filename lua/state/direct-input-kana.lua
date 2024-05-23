@@ -34,7 +34,7 @@ end
 
 function M.handle_input(c)
   if c == 'l' then
-    M.dfa.go_to_direct_input_hwc_state()
+    M.util.disable()
     return ''
 
   elseif c == 'L' then

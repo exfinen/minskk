@@ -184,7 +184,6 @@ function M.enter(inst)
   if #M.candidates == 0 then
     -- TODO support word registration
     M.dfa.go_to_input_reading_state(inst)
-      
     return nil
   end
 

@@ -4,8 +4,8 @@ local M = {
 }
 
 local DFAState = {
-  DirectInput_FWC = 1,
-  DirectInput_HWC = 2,
+  Disabled = 1,
+  DirectInput_FWC = 2,
   DirectInput_Hiragana = 3,
   DirectInput_Katakana = 4,
   InputReading_Reading = 5,
@@ -14,17 +14,11 @@ local DFAState = {
 }
 
 local direct_input_kana_state = require 'state/direct-input-kana'
-local direct_input_hwc_state = require 'state/direct-input-hwc'
 local direct_input_fwc_state = require 'state/direct-input-fwc'
 local input_reading_state = require 'state/input-reading'
 local select_kanji_state = require 'state/select-kanji'
 
 local status = require 'status'
-
-local function go_to_direct_input_hwc_state()
-  M.curr_state = direct_input_hwc_state
-  M.curr_state.enter()
-end
 
 local function go_to_direct_input_fwc_state()
   M.curr_state = direct_input_fwc_state
@@ -48,24 +42,37 @@ end
 
 function M.enable()
   if not M.is_enabled then
-    vim.cmd('startinsert')
+    vim.keymap.set("i", "<C-j>", function() M.curr_state.handle_ctrl_j() end, {})
+    vim.keymap.set("i", "<BS>", function() M.curr_state.handle_bs() end, {})
+    vim.keymap.set("i", "<C-h>", function() M.curr_state.handle_bs() end, {})
+    vim.keymap.set("i", "<ESC>", function() M.curr_state.handle_esc() end, {})
+    vim.keymap.set("i", "<CR>", function() M.curr_state.handle_cr() end, {})
+
     M.is_enabled = true
-    go_to_direct_input_hwc_state()
+    go_to_direct_input_kana_state()
   end
+end
+
+local function set_ctrl_j_keymap()
+  vim.api.nvim_set_keymap("i", "<C-j>", "<C-o>:MinSKKEnable<CR>", { silent = true })
 end
 
 local function disable()
   if M.is_enabled then
+    set_ctrl_j_keymap()
+    vim.keymap.del("i", "<BS>")
+    vim.keymap.del("i", "<C-h>")
+    vim.keymap.del("i", "<ESC>")
+    vim.keymap.del("i", "<CR>")
+
+    status.set('-')
     M.is_enabled = false
-    vim.cmd('stopinsert')
   end
 end
 
 local function set_dfa_state(state)
   if state == DFAState.DirectInput_FWC then
     status.set('全角英数')
-  elseif state == DFAState.DirectInput_HWC then
-    status.set('半角英数')
   elseif state == DFAState.DirectInput_Hiragana then
     status.set('ひらがな')
   elseif state == DFAState.DirectInput_Katakana then
@@ -89,18 +96,7 @@ function M.apply_settings_override(settings)
 end
 
 function M.init()
-  vim.api.nvim_set_keymap("n", "<C-j>", "<ESC>:MinSKKEnable<CR>", { silent = true })
-
-  vim.keymap.set("i", "<C-j>", function() M.curr_state.handle_ctrl_j() end, {})
-  vim.keymap.set("i", "<BS>", function() M.curr_state.handle_bs() end, {})
-  vim.keymap.set("i", "<C-h>", function() M.curr_state.handle_bs() end, {})
-  vim.keymap.set("i", "<ESC>", function() M.curr_state.handle_esc() end, {})
-  vim.keymap.set("i", "<CR>", function() M.curr_state.handle_cr() end, {})
-
-  vim.api.nvim_create_autocmd("InsertEnter", {
-    pattern = "*",
-    callback = M.enable,
-  })
+  set_ctrl_j_keymap()
 
   vim.api.nvim_create_autocmd("InsertCharPre", {
     pattern = "*",
@@ -111,10 +107,9 @@ function M.init()
     end,
   })
 
-  M.curr_state = direct_input_hwc_state
+  M.curr_state = direct_input_kana_state
 
   local dfa = {
-    go_to_direct_input_hwc_state = go_to_direct_input_hwc_state,
     go_to_direct_input_fwc_state = go_to_direct_input_fwc_state,
     go_to_direct_input_kana_state = go_to_direct_input_kana_state,
     go_to_input_reading_state = go_to_input_reading_state,
@@ -131,7 +126,6 @@ function M.init()
     DFAState = DFAState,
     status = status,
   }
-  direct_input_hwc_state.init(dfa, util)
   direct_input_fwc_state.init(dfa, util)
   direct_input_kana_state.init(dfa, util)
   input_reading_state.init(dfa, util)

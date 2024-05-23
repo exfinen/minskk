@@ -75,7 +75,8 @@ function M.handle_cr()
   else
     g_common.delete_n_chars_before_cursor(
       #'▽' + get_reading_len() + g_kana_tree.curr_depth,
-      0
+      0,
+      g_common.join_str_array(M.reading)
     )
   end
   M.dfa.go_to_direct_input_kana_state()
@@ -122,7 +123,7 @@ end
 local function handle_input_reading_mode(c)
   if c == 'l' then
     remove_inverted_triangle()
-    M.dfa.go_to_direct_input_hwc_state()
+    M.util.disable()
     return ''
 
   elseif c == 'L' then

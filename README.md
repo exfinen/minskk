@@ -18,7 +18,6 @@ This plugin is written using `Rust` for the dictionary related part and `Lua` fo
 - De/serialization w/ gzip of once-loaded dictionary
 
 ## Known issues
-- Lines disappear and cannot undo
 
 ## TO DO
 - Full-width (zenkaku) Symbol entry
