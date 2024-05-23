@@ -36,6 +36,7 @@ This plugin is written using `Rust` for the dictionary related part and `Lua` fo
 Currently this plugin has to be installed manually as follows.
 
 ```bash
+$ mkdir -p ~/.config/nvim/pack/plugins/start
 $ cd ~/.config/nvim/pack/plugins/start
 $ git clone https://github.com/exfinen/minskk.git
 $ cd rust
