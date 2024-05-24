@@ -33,7 +33,8 @@ function M.join_str_array(array)
   return s
 end
 
-function M.alert(message)
+function M.alert(message, ms)
+  ms = ms or 2000
   vim.schedule(function ()
     local buf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, { message })
@@ -56,7 +57,7 @@ function M.alert(message)
       if vim.api.nvim_win_is_valid(win) then
         vim.api.nvim_win_close(win, true)
       end
-    end, 2000)
+    end, ms)
   end)
 end
 

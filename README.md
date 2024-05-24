@@ -53,7 +53,7 @@ Also the plugin expects [SKK-JISHO.L](http://openlab.jp/skk/dic/SKK-JISYO.L.gz) 
    set statusline+=%{v:lua.minskk_statusline()}
    ```
 
-2. use `minskk_override` global variable to override the default settings. e.g. 
+2. use `minskk_override` global variable to override the default settings. e.g. add the following to `init.vim` 
 
    ```vim
    lua << EOF
@@ -67,7 +67,7 @@ Also the plugin expects [SKK-JISHO.L](http://openlab.jp/skk/dic/SKK-JISYO.L.gz) 
 This plugin serializes and gzips a dictionary the first time it is loaded. 
 From the second time onward, the plugin loads the dictionary from the serialized file.
 
-Below is a measurement of dicitonary load time for each dictionary type and file category.
+Below is a measurement of dicitonary load time for each dictionary type and file category on DM250.
 
 |                        | SKK-JISYO.S | SKK-JISHO.M | SKK-JISYO.L |
 | ---------------------- | ----------- | ----------- | ----------- |

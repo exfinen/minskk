@@ -11,12 +11,14 @@ local DFAState = {
   InputReading_Reading = 5,
   InputReading_AcKana = 6,
   SelectKanji = 7,
+  SelectKanjiList = 8,
 }
 
 local direct_input_kana_state = require 'state/direct-input-kana'
 local direct_input_fwc_state = require 'state/direct-input-fwc'
 local input_reading_state = require 'state/input-reading'
 local select_kanji_state = require 'state/select-kanji'
+local select_kanji_list_state = require 'state/select-kanji-list'
 
 local status = require 'status'
 
@@ -37,6 +39,11 @@ end
 
 local function go_to_select_kanji_state(inst)
   M.curr_state = select_kanji_state
+  return M.curr_state.enter(inst)
+end
+
+local function go_to_select_kanji_list_state(inst)
+  M.curr_state = select_kanji_list_state
   return M.curr_state.enter(inst)
 end
 
@@ -83,6 +90,8 @@ local function set_dfa_state(state)
     status.set('送り仮名')
   elseif state == DFAState.SelectKanji then
     status.set('漢字変換')
+  elseif state == DFAState.SelectKanjiList then
+    status.set('漢字キー変換')
   end
 end
 
@@ -114,6 +123,7 @@ function M.init()
     go_to_direct_input_kana_state = go_to_direct_input_kana_state,
     go_to_input_reading_state = go_to_input_reading_state,
     go_to_select_kanji_state = go_to_select_kanji_state,
+    go_to_select_kanji_list_state = go_to_select_kanji_list_state,
   }
   local bs = vim.api.nvim_replace_termcodes("<BS>", true, false, true)
   local cr = vim.api.nvim_replace_termcodes("<CR>", true, false, true)
@@ -130,6 +140,7 @@ function M.init()
   direct_input_kana_state.init(dfa, util)
   input_reading_state.init(dfa, util)
   select_kanji_state.init(dfa, util)
+  select_kanji_list_state.init(dfa, util)
 
   -- load dictionary
   local settings = {

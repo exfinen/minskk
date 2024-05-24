@@ -1,11 +1,13 @@
 local M = {
   curr_candidate_index = 0,
   candidates = {},
+  list_candidates = {},
 }
 
 local g_common = require 'common'
-
 local g_ffi = require 'ffi'
+
+local single_selection_up_to = 4
 
 g_ffi.cdef[[
   int build(const char* dict_file_path);
@@ -88,9 +90,16 @@ local function look_up(reading, ac_kana_letter, ac_kana_first_char)
 
   M.candidates = {};
 
-  for i = 1, tonumber(num_results[0]) do
+  local result_end_index = tonumber(num_results[0]) or 0
+
+  for i = 1, result_end_index do
     local candidate = g_ffi.string(results[i-1])
-    table.insert(M.candidates, candidate .. ac_kana_letter)
+
+    if i <= single_selection_up_to then
+      table.insert(M.candidates, candidate .. ac_kana_letter)
+    else
+      table.insert(M.list_candidates, candidate .. ac_kana_letter)
+    end
   end
 end
 
@@ -103,11 +112,23 @@ local function remove_inverted_triangle()
   g_common.delete_n_chars_before_cursor(#'▼', following_chars_len)
 end
 
-local function get_next_candidate()
-  -- update curr_candidate index
-  M.curr_candidate_index = (M.curr_candidate_index + 1) % #M.candidates
+local function get_next_candidate(first_time)
+  -- if the last candidate in the list now, move to list selection state
+  if #M.list_candidates > 0 and
+    not first_time
+    and M.curr_candidate_index + 1 == #M.candidates then
 
-  return get_curr_candidate()
+    M.dfa.go_to_select_kanji_list_state({
+      candidates = M.list_candidates,
+      reading = M.reading,
+    })
+    -- not updating curr_candidate_index to be able to come back
+    return M.list_candidates[1]
+  else
+    -- otherwise wrap around
+    M.curr_candidate_index = (M.curr_candidate_index + 1) % #M.candidates
+    return get_curr_candidate()
+  end
 end
 
 local function get_prev_candidate()
@@ -152,7 +173,7 @@ function M.handle_input(c)
   if c == ' ' then
     -- show the next candidate
     local curr_candidate_len = #get_curr_candidate()
-    local candidate = get_next_candidate()
+    local candidate = get_next_candidate(false)
     g_common.delete_n_chars_before_cursor(curr_candidate_len, 0, candidate)
     return ''
 
@@ -192,7 +213,7 @@ function M.enter(inst)
 
   M.util.set_dfa_state(M.util.DFAState.SelectKanji)
 
-  return get_next_candidate()
+  return get_next_candidate(true)
 end
 
 return M
