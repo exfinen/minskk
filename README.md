@@ -12,21 +12,19 @@ This plugin is written using `Rust` for the dictionary related part and `Lua` fo
 - Hiragana entry
 - Katakana entry
 - Half-width (hankaku) alphanumeric character entry
-- Full-width (zenkaku) alphabet entry
+- Full-width (zenkaku) alphanumeric character entry
 - Kanji conversion (with remaining issues)
 - Gzipped dictionary support
 - De/serialization w/ gzip of once-loaded dictionary
+- Candidate selection dialog
 
 ## Known issues
 
 ## TO DO
-- Full-width (zenkaku) symbol entry
-- Multiple dictionary support
-- Word registration
-- Word completion
-- Annotation
-- Candidate selection dialog
+- User dictionary
 - C-g
+- Multiple dictionary support
+- Word completion
 - Plugin manager support (vimplug at least)
 
 ## Requirements

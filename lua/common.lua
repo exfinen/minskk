@@ -36,10 +36,10 @@ end
 function M.alert(message, ms)
   ms = ms or 2000
   vim.schedule(function ()
-    local buf = vim.api.nvim_create_buf(false, true)
+    local buf = vim.api.nvim_create_buf(false, false)
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, { message })
 
-    local width = math.max(20, #message + 4)
+    local width = math.max(20, #message + 2)
     local height = 1
     local opts = {
       style = "minimal",
@@ -48,8 +48,9 @@ function M.alert(message, ms)
       height = height,
       row = math.floor((vim.o.lines - height) / 2),
       col = math.floor((vim.o.columns - width) / 2),
-      border = "single",
+      border = "none",
       noautocmd = false,
+      focusable = false,
     }
     local win = vim.api.nvim_open_win(buf, false, opts)
 
