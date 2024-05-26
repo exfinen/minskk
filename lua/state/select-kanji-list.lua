@@ -114,13 +114,7 @@ function M.handle_cr()
   select_candidate_head_and_go_to_direct_input_kana()
 end
 
-function M.handle_bs()
-  -- go back to previous selector
-  -- if now showing the first selector, go back to select kanji
-end
-
-function M.handle_esc()
-  -- go back to input reading
+local function go_back_to_input_reading()
   local a = '▼' .. get_candidate_head()
   local b = '▽' .. g_common.join_str_array(M.reading)
   g_common.delete_n_chars_before_cursor(#a, 0, b)
@@ -132,9 +126,32 @@ function M.handle_esc()
   })
 end
 
+function M.handle_bs()
+  local next_index = M.curr_index - #selectors
+  if next_index >= 0 then
+    -- go back to previous selector
+    local curr_candidate_head = get_candidate_head()
+    M.curr_index = next_index
+    local next_candidate_head = get_candidate_head()
+
+    g_common.delete_n_chars_before_cursor(
+      #curr_candidate_head, 0, next_candidate_head
+    )
+    local line = build_selector_line()
+    set_win_line(line)
+  else
+    -- was showing the first selector. go back to select kanji
+    go_back_to_input_reading()
+  end
+end
+
+function M.handle_esc()
+  go_back_to_input_reading()
+end
+
 function M.handle_input(c)
   if c == ' ' then
-    local prev_candidate_head = get_candidate_head()
+    local curr_candidate_head = get_candidate_head()
 
     -- update the currrent index
     M.curr_index = M.curr_index + #selectors
@@ -146,8 +163,9 @@ function M.handle_input(c)
     set_win_line(line)
 
     -- update the candidate head
+    local next_candidate_head = get_candidate_head()
     g_common.delete_n_chars_before_cursor(
-      #prev_candidate_head, 0, get_candidate_head()
+      #curr_candidate_head, 0, next_candidate_head
     )
     return ''
 

@@ -89,6 +89,7 @@ local function look_up(reading, ac_kana_letter, ac_kana_first_char)
   );
 
   M.candidates = {};
+  M.list_candidates = {};
 
   local result_end_index = tonumber(num_results[0]) or 0
 
