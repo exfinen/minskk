@@ -79,8 +79,10 @@ end
 function M.enter(inst)
   M.util.set_dfa_state(M.util.DFAState.SelectKanjiList)
   M.candidates = inst.candidates
-  M.curr_index = 0
+  M.curr_index = inst.curr_index or 0
   M.reading = inst.reading
+  M.ac_kana_letter = inst.ac_kana_letter
+  M.ac_kana_first_char = inst.ac_kana_first_char
 
   local line = build_selector_line()
   local cursor = vim.api.nvim_win_get_cursor(0)
@@ -153,11 +155,35 @@ function M.handle_input(c)
   if c == ' ' then
     local curr_candidate_head = get_candidate_head()
 
+    -- if currently the last selector
+    if M.curr_index + #selectors > #M.candidates - 1 then
+      hide_selector()
+
+      -- start registering word
+      local reading = g_common.join_str_array(M.reading)
+      local ac_kana = #M.ac_kana_letter > 0 and ('*' .. M.ac_kana_letter) or ''
+      local regist_str = string.format('[登録: %s%s]', reading, ac_kana)
+
+      local candidate_head_len = #curr_candidate_head
+      g_common.delete_n_chars_before_cursor(
+        #'▼' + candidate_head_len,
+        0,
+        regist_str
+      )
+      M.dfa.go_to_register_word_state({
+        candidates = M.candidates,
+        curr_index = M.curr_index,
+        reading = M.reading,
+        ac_kana_first_char = M.ac_kana_first_char,
+        ac_kana_letter = M.ac_kana_letter,
+        regist_str_len = #regist_str,
+        last_candidate_head = '▼' .. curr_candidate_head
+      })
+      return ''
+    end
+
     -- update the currrent index
     M.curr_index = M.curr_index + #selectors
-    if M.curr_index > #M.candidates - 1 then
-      M.curr_index = 0
-    end
 
     local line = build_selector_line()
     set_win_line(line)
@@ -177,7 +203,7 @@ function M.handle_input(c)
 
       -- select candidate
       local candidate = M.candidates[M.curr_index + offset + 1]
-      local candidate_head_len = #M.candidates[M.curr_index + 1]
+      local candidate_head_len = #get_candidate_head()
 
       g_common.delete_n_chars_before_cursor(
         #'▼' + candidate_head_len,

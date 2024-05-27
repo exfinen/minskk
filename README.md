@@ -42,7 +42,7 @@ $ cd rust
 $ cargo build --release
 ```
 
-Also the plugin expects [SKK-JISHO.L](http://openlab.jp/skk/dic/SKK-JISYO.L.gz) to exist under `~/.skk`. This can be overridden using `minskk_override` explained below.
+Also the plugin expects [SKK-JISHO.L](http://openlab.jp/skk/dic/SKK-JISYO.L.gz) to exist under `~/.skk`, and user dictionary file is `~/.skk/user-dict`. These settings can be overridden using `minskk_override` explained below.
 
 ## Configuration
 1. `minskk_statusline` is exposed to provide the current state of the plugin outside. e.g. the following adds the minskk state to the status line.
@@ -57,6 +57,7 @@ Also the plugin expects [SKK-JISHO.L](http://openlab.jp/skk/dic/SKK-JISYO.L.gz) 
    lua << EOF
      vim.g.minskk_override = {
        dict_file_path = '~/.skk/SKK-JISYO.S',
+       user_dict_file_path = '~/.skk/my-skk-dict',
      }
    EOF
    ```

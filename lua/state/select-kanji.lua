@@ -122,6 +122,8 @@ local function get_next_candidate(first_time)
     M.dfa.go_to_select_kanji_list_state({
       candidates = M.list_candidates,
       reading = M.reading,
+      ac_kana_letter = M.ac_kana_letter,
+      ac_kana_first_char = M.ac_kana_first_char,
     })
     -- not updating curr_candidate_index to be able to come back
     return M.list_candidates[1]
@@ -194,6 +196,11 @@ function M.handle_input(c)
   end
 end
 
+local function go_to_register_word_state()
+  -- implement this
+  M.dfa.go_to_input_reading_state()
+end
+
 -- returns the first candidate to display
 -- or returns nil and goes back to input reading state
 -- in case no candidate is found
@@ -204,13 +211,14 @@ function M.enter(inst)
     inst.ac_kana_first_char
   )
   if #M.candidates == 0 then
-    -- TODO support word registration
-    M.dfa.go_to_input_reading_state(inst)
-    return nil
+    go_to_register_word_state()
+    return ''
   end
 
   M.curr_candidate_index = #M.candidates - 1 -- point to the last element in the beginning
   M.reading = inst.reading
+  M.ac_kana_letter = inst.ac_kana_letter
+  M.ac_kana_first_char = inst.ac_kana_first_char
 
   M.util.set_dfa_state(M.util.DFAState.SelectKanji)
 

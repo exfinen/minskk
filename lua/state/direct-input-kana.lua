@@ -1,5 +1,3 @@
--- state to handle full-width kana input
-
 local M = {}
 
 local g_kana_tree = require 'state/kana-tree/logic'

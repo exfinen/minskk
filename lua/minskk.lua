@@ -12,6 +12,7 @@ local DFAState = {
   InputReading_AcKana = 6,
   SelectKanji = 7,
   SelectKanjiList = 8,
+  RegisterWord = 9,
 }
 
 local direct_input_kana_state = require 'state/direct-input-kana'
@@ -19,6 +20,7 @@ local direct_input_fwc_state = require 'state/direct-input-fwc'
 local input_reading_state = require 'state/input-reading'
 local select_kanji_state = require 'state/select-kanji'
 local select_kanji_list_state = require 'state/select-kanji-list'
+local register_word_state = require 'state/register-word'
 
 local status = require 'status'
 
@@ -44,6 +46,11 @@ end
 
 local function go_to_select_kanji_list_state(inst)
   M.curr_state = select_kanji_list_state
+  return M.curr_state.enter(inst)
+end
+
+local function go_to_register_word_state(inst)
+  M.curr_state = register_word_state
   return M.curr_state.enter(inst)
 end
 
@@ -92,6 +99,8 @@ local function set_dfa_state(state)
     status.set('漢字変換')
   elseif state == DFAState.SelectKanjiList then
     status.set('漢字キー変換')
+  elseif state == DFAState.RegisterWord then
+    status.set('単語登録')
   end
 end
 
@@ -124,6 +133,7 @@ function M.init()
     go_to_input_reading_state = go_to_input_reading_state,
     go_to_select_kanji_state = go_to_select_kanji_state,
     go_to_select_kanji_list_state = go_to_select_kanji_list_state,
+    go_to_register_word_state = go_to_register_word_state,
   }
   local bs = vim.api.nvim_replace_termcodes("<BS>", true, false, true)
   local cr = vim.api.nvim_replace_termcodes("<CR>", true, false, true)
@@ -141,21 +151,18 @@ function M.init()
   input_reading_state.init(dfa, util)
   select_kanji_state.init(dfa, util)
   select_kanji_list_state.init(dfa, util)
+  register_word_state.init(dfa, util)
 
-  -- load dictionary
+  -- default settings
   local settings = {
     dict_file_path = '~/.skk/SKK-JISYO.L',
+    user_dict_file_path = '~/.skk/user-dict',
   }
+  -- override defult settings if needed
   M.apply_settings_override(settings)
+
   select_kanji_state.build_dict(settings.dict_file_path)
-end
-
-function _G.minskk_setup(settings)
-  settings = settings or {}
-
-  if settings.dict_file_path then
-    M.dict_file_path = settings.dict_file_path
-  end
+  register_word_state.set_user_dict(settings.user_dict_file_path)
 end
 
 function _G.minskk_statusline()

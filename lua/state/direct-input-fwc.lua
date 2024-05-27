@@ -1,5 +1,3 @@
--- state to handle full-width character input
-
 local M = {}
 
 local g_converter = require 'state/conv-map/zen-alphanum'
