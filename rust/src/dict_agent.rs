@@ -33,6 +33,12 @@ pub enum BuildResult {
   PathMalformed= 2,
 }
 
+#[repr(C)]
+pub enum LoadDictResult {
+  Success = 0,
+  PathMalformed= 1,
+}
+
 fn read_lines_and_set_dict<T: Read>(reader: &mut BufReader<T>) {
   let lines = Dict::reader_to_lines(reader);
   match Dict::build(&lines) {
@@ -275,5 +281,54 @@ pub extern "C" fn get_results(
 
   // return the number of copied results to the caller
   unsafe { *num_results = i };
+}
+
+#[no_mangle]
+pub extern "C" fn load_or_create_user_dict(
+  dict_file_path: *const c_char,
+) -> LoadDictResult {
+  let dict_file_path = unsafe {
+    CStr::from_ptr(dict_file_path).to_str().unwrap()
+  }.to_string();
+
+  let dict_file_path =
+    shellexpand::tilde(&dict_file_path);
+  
+  match PathBuf::from_str(&dict_file_path) {
+    Ok(dict_file_path) => {
+      if exists_as_file(&dict_file_path) {
+        thread::spawn(move || {
+          // load user dict
+        });
+      } else {
+        // create new user dict
+      }
+      LoadDictResult::Success
+    },
+    Err(_) => {
+      LoadDictResult::PathMalformed
+    },
+  }
+}
+
+#[no_mangle]
+pub extern "C" fn add_word(
+  _reading: *mut *mut c_char,
+  _reading_len: size_t,
+  _ac_kana_first_char: c_char,
+  _word: *mut *mut c_char,
+  _word_len: size_t,
+) {
+  // prepend the word to on-memory dictionary
+  // add the word to user dictionary
+  //   - if already exists, move to the front
+  //   - if not exists, add to the end
+}
+
+#[no_mangle]
+pub extern "C" fn save_user_dict(
+  _dict_file_path: *const c_char,
+) {
+
 }
 

@@ -1,6 +1,7 @@
 local M = {}
 
 local g_kana_tree = require 'state/kana-tree/logic'
+local g_registering_word
 
 function M.init(dfa, util)
   g_kana_tree.init()
@@ -15,15 +16,18 @@ function M.enter()
   M.util.set_dfa_state(M.util.DFAState.DirectInput_Hiragana)
 end
 
+function M.handle_ctrl_g()
+end
+
 function M.handle_ctrl_j()
 end
 
 function M.handle_cr()
-  vim.api.nvim_feedkeys(M.util.cr, "in", true)
+  M.util.regist_mgr.handle_cr()
 end
 
 function M.handle_bs()
-  vim.api.nvim_feedkeys(M.util.bs, "in", true)
+  M.util.regist_mgr.try_to_insert_bs()
 end
 
 function M.handle_esc()

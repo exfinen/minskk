@@ -5,28 +5,8 @@ local M = {
 }
 
 local g_common = require 'common'
-local g_ffi = require 'ffi'
 
 local single_selection_up_to = 4
-
-g_ffi.cdef[[
-  int build(const char* dict_file_path);
-  void look_up(char** chars, char ac_kana, const size_t num_chars);
-  void get_results(char** results, const size_t buf_size, const size_t offset, size_t* num_results);
-]]
-
-local file_dir = debug.getinfo(1, 'S').source:match("@?(.*/)")
-
-local lib_ext
-if g_ffi.os == 'OSX' then
-  lib_ext = 'dylib'
-elseif g_ffi.os == 'Linux' or g_ffi.os == 'POSIX' then
-  lib_ext = 'so'
-else
-  error(g_ffi.os .. ' is not supported')
-end
-
-local g_dict = g_ffi.load(file_dir .. '../../rust/target/release/libminskk.' .. lib_ext)
 
 local BuildResult = {
   Succeeded = 0,
@@ -35,10 +15,10 @@ local BuildResult = {
 }
 
 function M.build_dict(dict_file_path)
-  local ffi_dict_file_path = g_ffi.new('char[?]', #dict_file_path + 1)
-  g_ffi.copy(ffi_dict_file_path, dict_file_path, #dict_file_path)
+  local ffi_dict_file_path = M.util.ffi.new('char[?]', #dict_file_path + 1)
+  M.util.ffi.copy(ffi_dict_file_path, dict_file_path, #dict_file_path)
 
-  local res = g_dict.build(ffi_dict_file_path)
+  local res = M.util.dict.build(ffi_dict_file_path)
 
   if res ~= BuildResult.Succeeded then
     local msg = 'MinSKK: '
@@ -60,28 +40,31 @@ function M.init(dfa, util)
 end
 
 local function look_up(reading, ac_kana_letter, ac_kana_first_char)
-  local chars = g_ffi.new("char*[?]", #reading)
+  local ffi = M.util.ffi
+  local dict = M.util.dict
+
+  local chars = ffi.new("char*[?]", #reading)
 
   for i = 1, #reading do
       -- + 1 for null termination. no need to set 0 since luajit zero-fills the array
-      chars[i-1] = g_ffi.new("char[?]", #reading[i] + 1)
-      g_ffi.copy(chars[i-1], reading[i])
+      chars[i-1] = ffi.new("char[?]", #reading[i] + 1)
+      ffi.copy(chars[i-1], reading[i])
   end
 
-  local ac_kana = g_ffi.new("char[1]", ac_kana_first_char:byte())
-  g_dict.look_up(chars, ac_kana[0], #reading)
+  local ac_kana = ffi.new("char[1]", ac_kana_first_char:byte())
+  dict.look_up(chars, ac_kana[0], #reading)
 
   local buf_size = 50
   local offset = 0
   local num_bufs = 10
-  local num_results = g_ffi.new("size_t[1]", num_bufs)
+  local num_results = ffi.new("size_t[1]", num_bufs)
 
-  local results = g_ffi.new("char*[?]", num_bufs)
+  local results = ffi.new("char*[?]", num_bufs)
   for i = 1, num_bufs do
-      results[i-1] = g_ffi.new("char[?]", buf_size)
+      results[i-1] = ffi.new("char[?]", buf_size)
   end
 
-  g_dict.get_results(
+  dict.get_results(
     results,
     buf_size,
     offset,
@@ -94,7 +77,7 @@ local function look_up(reading, ac_kana_letter, ac_kana_first_char)
   local result_end_index = tonumber(num_results[0]) or 0
 
   for i = 1, result_end_index do
-    local candidate = g_ffi.string(results[i-1])
+    local candidate = M.util.ffi.string(results[i-1])
 
     if i <= single_selection_up_to then
       table.insert(M.candidates, candidate .. ac_kana_letter)
@@ -143,6 +126,9 @@ local function get_prev_candidate()
   end
 
   return get_curr_candidate()
+end
+
+function M.handle_ctrl_g()
 end
 
 function M.handle_ctrl_j()

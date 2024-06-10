@@ -60,6 +60,9 @@ local function delete_ac_kana_part()
   g_common.delete_n_chars_before_cursor(x, 0)
 end
 
+function M.handle_ctrl_g()
+end
+
 function M.handle_ctrl_j()
   remove_inverted_triangle(get_reading_len())
   M.dfa.go_to_direct_input_kana_state()

@@ -25,6 +25,29 @@ function M.delete_n_chars_before_cursor(n, offset, replacement, suffix_len)
   end)
 end
 
+function M.get_curr_pos_w_line()
+  local buf = vim.api.nvim_get_current_buf()
+  local _, row, col, _ = unpack(vim.fn.getpos('.')) -- 1st column = 1
+  local line = vim.api.nvim_buf_get_lines(buf, row - 1, row, false)[1]
+  return col, line
+end
+
+function M.copy_str_array(array)
+  local res = {}
+  for i, s in ipairs(array) do
+      res[i] = s
+  end
+  return res
+end
+
+function M.copy_str_array_table_insert(array)
+    local res = {}
+    for _, value in ipairs(array) do
+        table.insert(res, value)
+    end
+    return res
+end
+
 function M.join_str_array(array)
   local s = ''
   for _, c in ipairs(array) do

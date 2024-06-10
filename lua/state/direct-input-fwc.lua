@@ -11,6 +11,9 @@ function M.enter()
   M.util.set_dfa_state(M.util.DFAState.DirectInput_FWC)
 end
 
+function M.handle_ctrl_g()
+end
+
 function M.handle_ctrl_j()
   M.dfa.go_to_direct_input_kana_state()
 end

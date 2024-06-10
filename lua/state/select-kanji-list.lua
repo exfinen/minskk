@@ -108,6 +108,9 @@ local function select_candidate_head_and_go_to_direct_input_kana()
   M.dfa.go_to_direct_input_kana_state()
 end
 
+function M.handle_ctrl_g()
+end
+
 function M.handle_ctrl_j()
   select_candidate_head_and_go_to_direct_input_kana()
 end
@@ -170,15 +173,37 @@ function M.handle_input(c)
         0,
         regist_str
       )
-      M.dfa.go_to_register_word_state({
-        candidates = M.candidates,
-        curr_index = M.curr_index,
-        reading = M.reading,
-        ac_kana_first_char = M.ac_kana_first_char,
-        ac_kana_letter = M.ac_kana_letter,
-        regist_str_len = #regist_str,
-        last_candidate_head = '▼' .. curr_candidate_head
-      })
+      -- schedule to call below after regist_str is displayed
+      vim.schedule(function()
+        local regist_str_len = #regist_str
+        local last_candidate_head = '▼' .. curr_candidate_head
+
+        -- create a new restration session
+        M.util.regist_mgr.push({
+          reading = M.reading,
+          ac_kana_first_char = M.ac_kana_first_char,
+          beg_pos = vim.fn.getpos('.')[3], -- 1st column = 1
+        })
+
+        -- register a callback to come back to the current state
+        M.util.regist_mgr.regist_go_back_to_select_kanji_list_state(function ()
+          g_common.delete_n_chars_before_cursor(
+            regist_str_len, 0, last_candidate_head
+          )
+
+          -- copying tables to allow recursive usage of this state
+          M.dfa.go_to_select_kanji_list_state({
+            candidates = g_common.copy_str_array_table_insert(M.candidates),
+            curr_index = M.curr_index,
+            reading = g_common.copy_str_array(M.reading),
+            ac_kana_letter = M.ac_kana_letter,
+            ac_kana_first_char = M.ac_kana_first_char,
+          })
+        end)
+
+        -- start registration session
+        M.dfa.go_to_direct_input_kana_state()
+      end)
       return ''
     end
 
